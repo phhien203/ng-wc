@@ -18,12 +18,14 @@ export interface Team {
   flag: string;
 }
 
+export type Side = 'home' | 'away';
+
 export interface Match {
   id: number;
   home: Team;
   away: Team;
   /** Winning team (once decided). undefined = not finished yet. */
-  winner?: 'home' | 'away';
+  winner?: Side;
   /** Result note, e.g. score/penalties */
   note?: string;
   /** Match date in Finland time (EEST, UTC+3) — e.g. "Mon Jun 29" */
@@ -97,4 +99,9 @@ export const ROUND_OF_32: Match[] = [
 export function winnerOf(m: Match): Team | null {
   if (!m.winner) return null;
   return m.winner === 'home' ? m.home : m.away;
+}
+
+/** Kickoff as epoch ms. `koISO` is Finland time, which is UTC+3 during the tournament. */
+export function kickoffMs(m: Match): number {
+  return Date.parse(`${m.koISO}:00+03:00`);
 }

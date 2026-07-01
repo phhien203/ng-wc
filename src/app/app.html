@@ -5,31 +5,111 @@
       <h1>Knockout<br />Bracket</h1>
     </header>
 
+    @if (liveMatch(); as live) {
+      <section class="next-up live-card" aria-label="Match in progress">
+        <span class="live-dot" aria-hidden="true"></span>
+        <div class="next-body">
+          <p class="next-label">Live now</p>
+          <p class="next-teams">
+            <img class="flag" [ngSrc]="flagUrl(live.home)" [alt]="live.home.name" width="22" height="16" />
+            {{ live.home.code }} <span class="vs">vs</span>
+            <img class="flag" [ngSrc]="flagUrl(live.away)" [alt]="live.away.name" width="22" height="16" />
+            {{ live.away.code }}
+          </p>
+        </div>
+      </section>
+    } @else if (nextMatch(); as next) {
+      <section class="next-up" aria-label="Next kickoff">
+        <div class="next-body">
+          <p class="next-label">Next kickoff</p>
+          <p class="next-teams">
+            <img class="flag" [ngSrc]="flagUrl(next.home)" [alt]="next.home.name" width="22" height="16" />
+            {{ next.home.code }} <span class="vs">vs</span>
+            <img class="flag" [ngSrc]="flagUrl(next.away)" [alt]="next.away.name" width="22" height="16" />
+            {{ next.away.code }}
+          </p>
+        </div>
+        <p class="next-count">in {{ countdown() }}</p>
+      </section>
+    }
+
     <section class="fixtures" aria-label="Round of 32 fixtures">
-      <h2>Round of 32 <span class="tz">· all times EEST (Helsinki)</span></h2>
+      <div class="fixtures-head">
+        <h2>Round of 32</h2>
+        <div class="toolbar">
+          <button type="button" class="chip" (click)="toggleTz()">
+            {{ tzMode() === 'fin' ? 'Show my time' : 'Show EEST' }}
+          </button>
+          @if (predictions.count() > 0) {
+            <button type="button" class="chip danger" (click)="predictions.clear()">
+              Clear picks ({{ predictions.count() }})
+            </button>
+          }
+        </div>
+      </div>
+      <p class="hint">All times {{ tzLabel() }} · pick winners by tapping a team in an upcoming match</p>
 
       @for (day of days(); track day.date) {
         <p class="day">{{ day.date }}</p>
         <ul class="match-list">
           @for (row of day.rows; track row.match.id) {
-            <li class="fixture" [class.active]="hovered() === row.match.id"
-                [class.played]="!!row.match.winner"
-                (mouseenter)="setHover(row.match.id)" (mouseleave)="setHover(null)">
-              <span class="time">{{ row.match.koTime }}</span>
+            <li
+              class="fixture"
+              [class.active]="highlighted() === row.match.id"
+              [class.pinned]="pinnedId() === row.match.id"
+              [class.played]="!!row.match.winner"
+              [class.next]="row.next"
+              (mouseenter)="setHover(row.match.id)"
+              (mouseleave)="setHover(null)"
+              (focusin)="setHover(row.match.id)"
+              (focusout)="setHover(null)"
+              (click)="togglePin(row.match.id)"
+            >
+              <span class="time">{{ row.time }}</span>
               <span class="teams">
-                <span class="team" [class.win]="row.match.winner === 'home'">
-                  <img class="flag" [src]="flagUrl(row.match.home)" [alt]="row.match.home.name" width="22" height="16" />
-                  {{ row.match.home.code }}
-                </span>
-                <span class="vs">vs</span>
-                <span class="team" [class.win]="row.match.winner === 'away'">
-                  <img class="flag" [src]="flagUrl(row.match.away)" [alt]="row.match.away.name" width="22" height="16" />
-                  {{ row.match.away.code }}
-                </span>
+                @if (row.match.winner) {
+                  <span class="team" [class.win]="row.match.winner === 'home'">
+                    <img class="flag" [ngSrc]="flagUrl(row.match.home)" [alt]="row.match.home.name" width="22" height="16" />
+                    {{ row.match.home.code }}
+                  </span>
+                  <span class="vs">vs</span>
+                  <span class="team" [class.win]="row.match.winner === 'away'">
+                    <img class="flag" [ngSrc]="flagUrl(row.match.away)" [alt]="row.match.away.name" width="22" height="16" />
+                    {{ row.match.away.code }}
+                  </span>
+                } @else {
+                  <button
+                    type="button"
+                    class="team pickable"
+                    [class.pick]="row.pick === 'home'"
+                    [attr.aria-pressed]="row.pick === 'home'"
+                    [attr.aria-label]="'Predict ' + row.match.home.name + ' to win'"
+                    (click)="$event.stopPropagation(); predictions.toggle(row.match.id, 'home')"
+                  >
+                    <img class="flag" [ngSrc]="flagUrl(row.match.home)" [alt]="''" width="22" height="16" />
+                    {{ row.match.home.code }}
+                  </button>
+                  <span class="vs">vs</span>
+                  <button
+                    type="button"
+                    class="team pickable"
+                    [class.pick]="row.pick === 'away'"
+                    [attr.aria-pressed]="row.pick === 'away'"
+                    [attr.aria-label]="'Predict ' + row.match.away.name + ' to win'"
+                    (click)="$event.stopPropagation(); predictions.toggle(row.match.id, 'away')"
+                  >
+                    <img class="flag" [ngSrc]="flagUrl(row.match.away)" [alt]="''" width="22" height="16" />
+                    {{ row.match.away.code }}
+                  </button>
+                }
               </span>
               <span class="status">
                 @if (row.match.winner) {
                   {{ row.match.note }}
+                } @else if (row.live) {
+                  <span class="live-badge"><span class="live-dot" aria-hidden="true"></span>Live</span>
+                } @else if (row.pick) {
+                  <span class="pick-note">Pick: {{ row.pick === 'home' ? row.match.home.code : row.match.away.code }}</span>
                 } @else {
                   <span class="soon">Upcoming</span>
                 }
@@ -42,7 +122,14 @@
   </aside>
 
   <div class="stage">
-    <app-bracket-wheel [matches]="matches()" [hovered]="hovered()" (hoverChange)="setHover($event)" />
+    <app-bracket-wheel
+      [matches]="matches()"
+      [hovered]="highlighted()"
+      [picks]="predictions.picks()"
+      [nextId]="nextMatch()?.id ?? null"
+      (hoverChange)="setHover($event)"
+      (pickChange)="predictions.toggle($event.matchId, $event.side)"
+    />
     <p class="source">Source: Yahoo Sports, CBS Sports, ESPN — updated Jul 1, 2026</p>
   </div>
 </main>
