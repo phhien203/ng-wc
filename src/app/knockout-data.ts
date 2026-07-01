@@ -28,6 +28,10 @@ export interface Match {
   winner?: Side;
   /** Result note, e.g. score/penalties */
   note?: string;
+  /** Match state from the live score feed; absent for the bundled fallback data */
+  state?: 'pre' | 'in' | 'post';
+  /** Score + match clock while in progress, e.g. "1-0 · 63'" */
+  liveNote?: string;
   /** Match date in Finland time (EEST, UTC+3) — e.g. "Mon Jun 29" */
   koDate: string;
   /** Kickoff time in Finland time, e.g. "23:30" */

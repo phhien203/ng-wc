@@ -97,6 +97,10 @@
     font-weight: 800;
     color: var(--gold);
     white-space: nowrap;
+
+    &.live-score {
+      color: var(--text);
+    }
   }
 }
 

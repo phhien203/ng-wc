@@ -47,7 +47,7 @@ export class App {
   private readonly feed = inject(KnockoutFeed);
   protected readonly predictions = inject(Predictions);
 
-  /** Match data, auto-updated every hour via the custom `poll` operator. */
+  /** Match data, refreshed every minute from the live score feed. */
   protected readonly matches = this.feed.matches;
 
   /** Ticks every 30 s so the countdown and LIVE badge stay fresh. */
@@ -67,13 +67,18 @@ export class App {
     inject(DestroyRef).onDestroy(() => clearInterval(timer));
   }
 
-  /** Matches currently in progress (kicked off, no result yet). */
+  /** Matches currently in progress — from the live feed when available, else by kickoff window. */
   private readonly liveIds = computed<ReadonlySet<number>>(() => {
     const t = this.now();
     const ids = new Set<number>();
     for (const m of this.matches()) {
-      const ko = kickoffMs(m);
-      if (!m.winner && ko <= t && t - ko < LIVE_WINDOW_MS) ids.add(m.id);
+      if (m.winner) continue;
+      if (m.state) {
+        if (m.state === 'in') ids.add(m.id);
+      } else {
+        const ko = kickoffMs(m);
+        if (ko <= t && t - ko < LIVE_WINDOW_MS) ids.add(m.id);
+      }
     }
     return ids;
   });

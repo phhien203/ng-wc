@@ -1,28 +1,32 @@
-import { Injectable, Signal } from '@angular/core';
+import { Injectable, Signal, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { defer, of } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Match, ROUND_OF_32 } from './knockout-data';
+import { EspnScoreboard, SCOREBOARD_URL, mergeScoreboard } from './espn-scoreboard';
 import { poll } from './poll.operator';
 
 /**
- * Knockout data source that refreshes ITSELF EVERY HOUR via the custom `poll` operator.
+ * Live knockout data: polls ESPN's public scoreboard every minute via the
+ * custom `poll` operator and merges scores/results into the bundled bracket.
  *
- * In production, replace `defer(() => of(ROUND_OF_32))` with a cold HTTP call:
- *   private readonly http = inject(HttpClient);
- *   private readonly fetch$ = this.http.get<Match[]>('/api/round-of-32');
- * `poll` will re-issue that request every hour (cancelling the previous one if still in flight).
+ * `poll`'s built-in `retry` keeps a failed fetch from killing the stream, so
+ * the signal simply holds the last good value (initially the bundled data)
+ * until the next successful poll.
  */
 @Injectable({ providedIn: 'root' })
 export class KnockoutFeed {
-  /** Simulates a cold observable that "fetches" the latest data. */
-  private readonly fetch$ = defer(() => of(ROUND_OF_32));
+  private readonly http = inject(HttpClient);
+
+  private readonly fetch$ = this.http
+    .get<EspnScoreboard>(SCOREBOARD_URL)
+    .pipe(map((scoreboard) => mergeScoreboard(ROUND_OF_32, scoreboard)));
 
   /**
-   * Signal of matches, updated every hour.
+   * Signal of matches, updated every minute.
    * `toSignal` auto-unsubscribes when the (root) injector is destroyed → no leak.
    */
-  readonly matches: Signal<Match[]> = toSignal(
-    this.fetch$.pipe(poll<Match[]>({ period: 60 * 60 * 1000 })),
-    { initialValue: ROUND_OF_32 },
-  );
+  readonly matches: Signal<Match[]> = toSignal(this.fetch$.pipe(poll<Match[]>({ period: 60_000 })), {
+    initialValue: ROUND_OF_32,
+  });
 }

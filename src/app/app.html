@@ -17,6 +17,9 @@
             {{ live.away.code }}
           </p>
         </div>
+        @if (live.liveNote) {
+          <p class="next-count live-score">{{ live.liveNote }}</p>
+        }
       </section>
     } @else if (nextMatch(); as next) {
       <section class="next-up" aria-label="Next kickoff">
@@ -107,7 +110,9 @@
                 @if (row.match.winner) {
                   {{ row.match.note }}
                 } @else if (row.live) {
-                  <span class="live-badge"><span class="live-dot" aria-hidden="true"></span>Live</span>
+                  <span class="live-badge">
+                    <span class="live-dot" aria-hidden="true"></span>{{ row.match.liveNote ?? 'Live' }}
+                  </span>
                 } @else if (row.pick) {
                   <span class="pick-note">Pick: {{ row.pick === 'home' ? row.match.home.code : row.match.away.code }}</span>
                 } @else {
@@ -130,6 +135,6 @@
       (hoverChange)="setHover($event)"
       (pickChange)="predictions.toggle($event.matchId, $event.side)"
     />
-    <p class="source">Source: Yahoo Sports, CBS Sports, ESPN — updated Jul 1, 2026</p>
+    <p class="source">Live scores via ESPN — refreshes every minute</p>
   </div>
 </main>

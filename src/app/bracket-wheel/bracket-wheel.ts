@@ -71,7 +71,7 @@ export class BracketWheel {
   readonly hovered = input<number | null>(null);
   readonly hoverChange = output<number | null>();
 
-  /** Match data, provided from outside (polled hourly). */
+  /** Match data, provided from outside (live feed, polled every minute). */
   readonly matches = input<Match[]>(ROUND_OF_32);
 
   /** User pick'em predictions for undecided matches */
@@ -93,7 +93,7 @@ export class BracketWheel {
       const h = polar(R_OUTER, homeA);
       const a = polar(R_OUTER, awayA);
       const base = `${m.home.name} vs ${m.away.name} · ${m.koDate} ${m.koTime} (FIN)`;
-      const tip = m.note ? `${base} · ${m.note}` : base;
+      const tip = m.note ? `${base} · ${m.note}` : m.liveNote ? `${base} · LIVE ${m.liveNote}` : base;
       const pick = m.winner ? undefined : picks[m.id];
       const next = m.id === nextId;
       const decided = !!m.winner;
