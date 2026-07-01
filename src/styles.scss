@@ -1,0 +1,32 @@
+/* Global styles */
+:root {
+  --font-sport: 'Oswald', 'Saira Condensed', system-ui, sans-serif;
+  --font-display: 'Saira Condensed', 'Oswald', system-ui, sans-serif;
+
+  /* Modern dark palette */
+  --bg-0: #0a0d14;
+  --bg-1: #10141f;
+  --surface: #161c2b;
+  --surface-2: #1d2435;
+  --line: #2b3346;
+  --text: #e8ecf4;
+  --text-dim: #8b97ad;
+  --accent: #2dd4bf;     /* teal */
+  --accent-2: #6366f1;   /* indigo */
+  --win: #34d399;        /* emerald */
+  --lose: #fb7185;       /* rose */
+  --gold: #fbbf24;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg-0);
+  color: var(--text);
+  font-family: var(--font-sport);
+}

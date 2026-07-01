@@ -1,0 +1,148 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.wheel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+svg {
+  width: min(94vmin, 900px);
+  height: auto;
+  display: block;
+  user-select: none;
+}
+
+/* ---- team node ---- */
+.node {
+  cursor: pointer;
+  transition: opacity 0.25s ease;
+
+  .bg {
+    fill: var(--surface);
+    stroke: none;
+  }
+
+  .bg.advancing {
+    fill: #11342b;
+  }
+
+  /* stroke drawn on top of the flag */
+  .stroke {
+    fill: none;
+    stroke: #3b465c;
+    stroke-width: 2.5;
+    transition: stroke 0.2s ease, stroke-width 0.2s ease;
+  }
+
+  .stroke.advancing {
+    stroke: var(--win);
+    stroke-width: 3;
+  }
+
+  .stroke.eliminated {
+    stroke: #5a3a48;
+    stroke-width: 2;
+  }
+
+  .code {
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 700;
+    fill: var(--text);
+    letter-spacing: 0.6px;
+  }
+
+  &:hover .stroke {
+    stroke: var(--accent);
+    stroke-width: 4;
+    filter: drop-shadow(0 0 7px rgba(45, 212, 191, 0.9));
+  }
+
+  &.dim {
+    opacity: 0.14;
+  }
+}
+
+/* TBD node */
+.node.tbd {
+  cursor: default;
+
+  .bg {
+    fill: #141a28;
+    stroke: #2c3650;
+    stroke-width: 2;
+    stroke-dasharray: 3 4;
+  }
+
+  .qmark {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 800;
+    fill: #56688c;
+    dominant-baseline: middle;
+  }
+
+  .round-tag {
+    font-family: var(--font-sport);
+    font-size: 12px;
+    font-weight: 600;
+    fill: #6c80a8;
+    letter-spacing: 1px;
+  }
+}
+
+.ring.r16 .qmark {
+  font-size: 28px;
+}
+
+/* ---- links (all curves: fill must be none) ---- */
+.match-link,
+.link {
+  fill: none;
+  stroke-linecap: round;
+}
+
+.match-link {
+  stroke: #5a6f9c;
+  stroke-width: 2.4;
+  transition: opacity 0.25s ease, stroke 0.2s ease, stroke-width 0.2s ease;
+
+  &.active {
+    stroke: var(--accent);
+    stroke-width: 3.6;
+    filter: drop-shadow(0 0 5px rgba(45, 212, 191, 0.7));
+  }
+
+  &.dim {
+    opacity: 0.1;
+  }
+}
+
+.link {
+  stroke-width: 1.8;
+  transition: opacity 0.25s ease;
+
+  &.decided {
+    stroke: var(--win);
+  }
+
+  &.future {
+    stroke: #313c54;
+    stroke-dasharray: 4 6;
+  }
+
+  &.dim {
+    opacity: 0.1;
+  }
+}
+
+/* ---- center medallion + real trophy photo ---- */
+.center {
+  pointer-events: none;
+  filter: drop-shadow(0 0 18px rgba(202, 162, 60, 0.4));
+}

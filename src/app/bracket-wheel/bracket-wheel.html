@@ -1,0 +1,97 @@
+<div class="wheel">
+  <svg viewBox="0 0 1000 1000" role="img"
+       aria-label="World Cup 2026 knockout bracket: outer ring 32 teams, middle ring 16 teams, inner ring 8 quarterfinal slots, trophy at the center">
+    <defs>
+      <radialGradient id="medallion" cx="50%" cy="40%" r="65%">
+        <stop offset="0%" stop-color="#222c44" />
+        <stop offset="100%" stop-color="#0c1019" />
+      </radialGradient>
+      <clipPath id="clipOuter"><circle r="30" /></clipPath>
+      <clipPath id="clipR16"><circle r="27" /></clipPath>
+      <clipPath id="clipTrophy"><circle cx="500" cy="500" r="118" /></clipPath>
+    </defs>
+
+    <!-- ring guides (transparent background) -->
+    <circle [attr.cx]="cx" [attr.cy]="cy" r="468" fill="none" stroke="#222b3d" stroke-width="1" stroke-dasharray="1 7" />
+    <circle [attr.cx]="cx" [attr.cy]="cy" r="310" fill="none" stroke="#222b3d" stroke-width="1" stroke-dasharray="1 7" />
+    <circle [attr.cx]="cx" [attr.cy]="cy" r="158" fill="none" stroke="#222b3d" stroke-width="1" stroke-dasharray="1 7" />
+
+    <!-- R16 → Quarterfinal links -->
+    <g class="links">
+      @for (l of qfLinks(); track $index) {
+        <path [attr.d]="l.d" class="link future" />
+      }
+    </g>
+
+    <!-- R32 → R16 links -->
+    <g class="links">
+      @for (l of r16Links(); track l.matchId) {
+        <path [attr.d]="l.d" class="link" [class.decided]="l.decided" [class.future]="!l.decided"
+              [class.dim]="isDimmed(l.matchId)" />
+      }
+    </g>
+
+    <!-- match links between the two opponents (outer ring) -->
+    <g class="links">
+      @for (l of matchLinks(); track l.matchId) {
+        <path [attr.d]="l.d" class="match-link"
+              [class.active]="hovered() === l.matchId" [class.dim]="isDimmed(l.matchId)" />
+      }
+    </g>
+
+    <!-- Inner ring: 8 Quarterfinal slots (TBD) -->
+    <g class="ring qf">
+      @for (n of qfNodes(); track $index) {
+        <g class="node tbd" [attr.transform]="'translate(' + n.x + ',' + n.y + ')'">
+          <title>{{ n.tip }}</title>
+          <circle [attr.r]="sizeQf" class="bg" />
+          <text class="qmark" y="1" text-anchor="middle">?</text>
+        </g>
+      }
+    </g>
+
+    <!-- Middle ring: 16 teams (Round of 16) -->
+    <g class="ring r16">
+      @for (n of r16Nodes(); track n.matchId) {
+        <g class="node" [class.tbd]="!n.team" [class.dim]="isDimmed(n.matchId)"
+           (mouseenter)="onEnter(n.matchId)" (mouseleave)="onLeave()"
+           [attr.transform]="'translate(' + n.x + ',' + n.y + ')'">
+          <title>{{ n.tip }}</title>
+          @if (n.team; as team) {
+            <circle [attr.r]="sizeR16" class="bg advancing" />
+            <image [attr.href]="flagUrl(team)" x="-37.5" y="-28" width="75" height="56"
+                   preserveAspectRatio="xMidYMid meet" clip-path="url(#clipR16)" />
+            <circle [attr.r]="sizeR16" class="stroke advancing" />
+            <text class="code" [attr.y]="sizeR16 + 14" text-anchor="middle">{{ team.code }}</text>
+          } @else {
+            <circle [attr.r]="sizeR16" class="bg" />
+            <text class="qmark" y="1" text-anchor="middle">?</text>
+          }
+        </g>
+      }
+    </g>
+
+    <!-- Outer ring: 32 teams (Round of 32) — flags only, names via tooltip -->
+    <g class="ring outer">
+      @for (n of outerNodes(); track n.matchId + '-' + n.team!.code) {
+        <g class="node" [class.dim]="isDimmed(n.matchId)"
+           (mouseenter)="onEnter(n.matchId)" (mouseleave)="onLeave()"
+           [attr.transform]="'translate(' + n.x + ',' + n.y + ')'">
+          <title>{{ n.tip }}</title>
+          <circle [attr.r]="sizeOuter" class="bg" [class.advancing]="n.advancing" />
+          <image [attr.href]="flagUrl(n.team!)" x="-41.5" y="-31" width="83" height="62"
+                 preserveAspectRatio="xMidYMid meet" clip-path="url(#clipOuter)" />
+          <circle [attr.r]="sizeOuter" class="stroke" [class.advancing]="n.advancing" [class.eliminated]="!n.advancing" />
+        </g>
+      }
+    </g>
+
+    <!-- Center medallion + real trophy photo -->
+    <g class="center">
+      <circle [attr.cx]="cx" [attr.cy]="cy" r="119" fill="url(#medallion)" />
+      <image class="trophy" href="wc-emblem.svg" x="419.3" y="371.5" width="162" height="251"
+             preserveAspectRatio="xMidYMid meet" clip-path="url(#clipTrophy)" />
+      <circle [attr.cx]="cx" [attr.cy]="cy" r="119" fill="none" stroke="#caa23c" stroke-width="3" />
+    </g>
+  </svg>
+</div>

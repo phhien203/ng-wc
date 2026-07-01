@@ -1,0 +1,48 @@
+<main class="page">
+  <aside class="sidebar">
+    <header class="masthead">
+      <p class="kicker">FIFA World Cup 2026 · Canada · Mexico · USA</p>
+      <h1>Knockout<br />Bracket</h1>
+    </header>
+
+    <section class="fixtures" aria-label="Round of 32 fixtures">
+      <h2>Round of 32 <span class="tz">· all times EEST (Helsinki)</span></h2>
+
+      @for (day of days(); track day.date) {
+        <p class="day">{{ day.date }}</p>
+        <ul class="match-list">
+          @for (row of day.rows; track row.match.id) {
+            <li class="fixture" [class.active]="hovered() === row.match.id"
+                [class.played]="!!row.match.winner"
+                (mouseenter)="setHover(row.match.id)" (mouseleave)="setHover(null)">
+              <span class="time">{{ row.match.koTime }}</span>
+              <span class="teams">
+                <span class="team" [class.win]="row.match.winner === 'home'">
+                  <img class="flag" [src]="flagUrl(row.match.home)" [alt]="row.match.home.name" width="22" height="16" />
+                  {{ row.match.home.code }}
+                </span>
+                <span class="vs">vs</span>
+                <span class="team" [class.win]="row.match.winner === 'away'">
+                  <img class="flag" [src]="flagUrl(row.match.away)" [alt]="row.match.away.name" width="22" height="16" />
+                  {{ row.match.away.code }}
+                </span>
+              </span>
+              <span class="status">
+                @if (row.match.winner) {
+                  {{ row.match.note }}
+                } @else {
+                  <span class="soon">Upcoming</span>
+                }
+              </span>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  </aside>
+
+  <div class="stage">
+    <app-bracket-wheel [matches]="matches()" [hovered]="hovered()" (hoverChange)="setHover($event)" />
+    <p class="source">Source: Yahoo Sports, CBS Sports, ESPN — updated Jul 1, 2026</p>
+  </div>
+</main>
