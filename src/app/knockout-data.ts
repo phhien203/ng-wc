@@ -82,7 +82,7 @@ export const ROUND_OF_32: Match[] = [
   { id: 5,  home: T.BRA, away: T.JPN, winner: 'home', note: '2-1',           koDate: 'Mon Jun 29', koTime: '20:00', koISO: '2026-06-29T20:00' },
   { id: 6,  home: T.CIV, away: T.NOR, winner: 'away', note: '1-2',           koDate: 'Tue Jun 30', koTime: '20:00', koISO: '2026-06-30T20:00' },
   { id: 7,  home: T.MEX, away: T.ECU, winner: 'home', note: '2-0',           koDate: 'Wed Jul 1',  koTime: '04:00', koISO: '2026-07-01T04:00' },
-  { id: 8,  home: T.ENG, away: T.COD,                                        koDate: 'Wed Jul 1',  koTime: '19:00', koISO: '2026-07-01T19:00' },
+  { id: 8,  home: T.ENG, away: T.COD, winner: 'home', note: '2-1',           koDate: 'Wed Jul 1',  koTime: '19:00', koISO: '2026-07-01T19:00' },
   { id: 9,  home: T.ESP, away: T.AUT,                                        koDate: 'Thu Jul 2',  koTime: '22:00', koISO: '2026-07-02T22:00' },
   { id: 10, home: T.POR, away: T.CRO,                                        koDate: 'Fri Jul 3',  koTime: '02:00', koISO: '2026-07-03T02:00' },
   { id: 11, home: T.BEL, away: T.SEN,                                        koDate: 'Wed Jul 1',  koTime: '23:00', koISO: '2026-07-01T23:00' },
