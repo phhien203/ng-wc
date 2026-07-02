@@ -1,9 +1,10 @@
-import { Injectable, Signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Service, Signal, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs/operators';
-import { Match, ROUND_OF_32 } from './knockout-data';
+
 import { EspnScoreboard, SCOREBOARD_URL, mergeScoreboard } from './espn-scoreboard';
+import { Match, ROUND_OF_32 } from './knockout-data';
 import { poll } from './poll.operator';
 
 /**
@@ -14,7 +15,7 @@ import { poll } from './poll.operator';
  * the signal simply holds the last good value (initially the bundled data)
  * until the next successful poll.
  */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class KnockoutFeed {
   private readonly http = inject(HttpClient);
 
@@ -26,7 +27,10 @@ export class KnockoutFeed {
    * Signal of matches, updated every minute.
    * `toSignal` auto-unsubscribes when the (root) injector is destroyed → no leak.
    */
-  readonly matches: Signal<Match[]> = toSignal(this.fetch$.pipe(poll<Match[]>({ period: 60_000 })), {
-    initialValue: ROUND_OF_32,
-  });
+  readonly matches: Signal<Match[]> = toSignal(
+    this.fetch$.pipe(poll<Match[]>({ period: 60_000 })),
+    {
+      initialValue: ROUND_OF_32,
+    },
+  );
 }

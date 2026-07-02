@@ -1,29 +1,16 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { BracketWheel } from './bracket-wheel/bracket-wheel';
+import { FixtureList } from './fixture-list/fixture-list';
 import { KnockoutFeed } from './knockout-feed';
-import { Match, Team, kickoffMs, winnerOf } from './knockout-data';
-
-interface FixtureRow {
-  match: Match;
-  winner: Team | null;
-  /** Kickoff time label in the active timezone */
-  time: string;
-  live: boolean;
-  next: boolean;
-}
-
-interface DayGroup {
-  date: string;
-  rows: FixtureRow[];
-}
+import { Match, Team, kickoffMs } from './knockout-data';
 
 /** A match without a result within this window after kickoff is considered live. */
 const LIVE_WINDOW_MS = 150 * 60 * 1000;
 
 @Component({
   selector: 'app-root',
-  imports: [BracketWheel, NgOptimizedImage],
+  imports: [BracketWheel, FixtureList, NgOptimizedImage],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -45,7 +32,7 @@ export class App {
   }
 
   /** Matches currently in progress — from the live feed when available, else by kickoff window. */
-  private readonly liveIds = computed<ReadonlySet<number>>(() => {
+  protected readonly liveIds = computed<ReadonlySet<number>>(() => {
     const t = this.now();
     const ids = new Set<number>();
     for (const m of this.matches()) {
@@ -86,27 +73,6 @@ export class App {
     if (d > 0) return `${d}d ${h}h`;
     if (h > 0) return `${h}h ${String(m).padStart(2, '0')}m`;
     return `${m}m`;
-  });
-
-  /** 16 matches grouped by day in Helsinki time, newest → oldest */
-  protected readonly days = computed<DayGroup[]>(() => {
-    const liveIds = this.liveIds();
-    const nextId = this.nextMatch()?.id ?? null;
-    const sorted = [...this.matches()].sort((a, b) => b.koISO.localeCompare(a.koISO));
-    const groups = new Map<string, FixtureRow[]>();
-    for (const m of sorted) {
-      const row: FixtureRow = {
-        match: m,
-        winner: winnerOf(m),
-        time: m.koTime,
-        live: liveIds.has(m.id),
-        next: m.id === nextId,
-      };
-      const list = groups.get(m.koDate);
-      if (list) list.push(row);
-      else groups.set(m.koDate, [row]);
-    }
-    return Array.from(groups, ([date, rows]) => ({ date, rows }));
   });
 
   protected flagUrl(team: Team): string {

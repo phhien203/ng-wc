@@ -30,3 +30,30 @@ body {
   color: var(--text);
   font-family: var(--font-sport);
 }
+
+/* blinking "live" indicator, shared by the sidebar card and fixture rows */
+.live-dot {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--lose);
+  box-shadow: 0 0 8px var(--lose);
+  animation: live-blink 1.4s ease-in-out infinite;
+}
+
+@keyframes live-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-dot {
+    animation: none;
+  }
+}
