@@ -26,8 +26,8 @@
     <!-- R32 → R16 links -->
     <g class="links">
       @for (l of r16Links(); track l.matchId) {
-        <path [attr.d]="l.d" class="link" [class.decided]="l.decided" [class.predicted]="l.predicted"
-              [class.future]="!l.decided && !l.predicted" [class.dim]="isDimmed(l.matchId)" />
+        <path [attr.d]="l.d" class="link" [class.decided]="l.decided"
+              [class.future]="!l.decided" [class.dim]="isDimmed(l.matchId)" />
       }
     </g>
 
@@ -58,10 +58,10 @@
            [attr.transform]="'translate(' + n.x + ',' + n.y + ')'">
           <title>{{ n.tip }}</title>
           @if (n.team; as team) {
-            <circle [attr.r]="sizeR16" class="bg" [class.advancing]="n.advancing" [class.predicted]="n.predicted" />
+            <circle [attr.r]="sizeR16" class="bg" [class.advancing]="n.advancing" />
             <image [attr.href]="flagUrl(team)" x="-37.5" y="-28" width="75" height="56"
                    preserveAspectRatio="xMidYMid meet" clip-path="url(#clipR16)" />
-            <circle [attr.r]="sizeR16" class="stroke" [class.advancing]="n.advancing" [class.predicted]="n.predicted" />
+            <circle [attr.r]="sizeR16" class="stroke" [class.advancing]="n.advancing" />
             <text class="code" [attr.y]="sizeR16 + 14" text-anchor="middle">{{ team.code }}</text>
           } @else {
             <circle [attr.r]="sizeR16" class="bg" />
@@ -74,14 +74,14 @@
     <!-- Outer ring: 32 teams (Round of 32) — flags only, names via tooltip -->
     <g class="ring outer">
       @for (n of outerNodes(); track n.matchId + '-' + n.team!.code) {
-        <g class="node" [class.dim]="isDimmed(n.matchId)" [class.next]="n.next" [class.pickable]="!n.decided"
-           (mouseenter)="onEnter(n.matchId)" (mouseleave)="onLeave()" (click)="onNodeClick(n)"
+        <g class="node" [class.dim]="isDimmed(n.matchId)" [class.next]="n.next"
+           (mouseenter)="onEnter(n.matchId)" (mouseleave)="onLeave()"
            [attr.transform]="'translate(' + n.x + ',' + n.y + ')'">
           <title>{{ n.tip }}</title>
-          <circle [attr.r]="sizeOuter" class="bg" [class.advancing]="n.advancing" [class.predicted]="n.predicted" />
+          <circle [attr.r]="sizeOuter" class="bg" [class.advancing]="n.advancing" />
           <image [attr.href]="flagUrl(n.team!)" x="-41.5" y="-31" width="83" height="62"
                  preserveAspectRatio="xMidYMid meet" clip-path="url(#clipOuter)" />
-          <circle [attr.r]="sizeOuter" class="stroke" [class.advancing]="n.advancing" [class.predicted]="n.predicted"
+          <circle [attr.r]="sizeOuter" class="stroke" [class.advancing]="n.advancing"
                   [class.eliminated]="n.decided && !n.advancing" />
         </g>
       }

@@ -49,17 +49,6 @@ svg {
     stroke-width: 2;
   }
 
-  /* user's pick'em prediction (undecided match) */
-  .bg.predicted {
-    fill: #10333a;
-  }
-
-  .stroke.predicted {
-    stroke: var(--accent);
-    stroke-width: 3;
-    stroke-dasharray: 6 5;
-  }
-
   .code {
     font-family: var(--font-display);
     font-size: 13px;
@@ -80,7 +69,7 @@ svg {
 }
 
 /* next match to kick off — soft golden pulse */
-.node.next .stroke:not(.predicted) {
+.node.next .stroke {
   stroke: var(--gold);
   animation: next-pulse 1.8s ease-in-out infinite;
 }
@@ -98,7 +87,7 @@ svg {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .node.next .stroke:not(.predicted) {
+  .node.next .stroke {
     animation: none;
     stroke-opacity: 1;
     stroke-width: 3.5;
@@ -170,12 +159,6 @@ svg {
 
   &.decided {
     stroke: var(--win);
-  }
-
-  &.predicted {
-    stroke: var(--accent);
-    stroke-dasharray: 4 6;
-    opacity: 0.85;
   }
 
   &.future {

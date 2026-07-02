@@ -2,8 +2,7 @@ import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { BracketWheel } from './bracket-wheel/bracket-wheel';
 import { KnockoutFeed } from './knockout-feed';
-import { Predictions } from './predictions';
-import { Match, Side, Team, kickoffMs, winnerOf } from './knockout-data';
+import { Match, Team, kickoffMs, winnerOf } from './knockout-data';
 
 interface FixtureRow {
   match: Match;
@@ -12,7 +11,6 @@ interface FixtureRow {
   time: string;
   live: boolean;
   next: boolean;
-  pick: Side | null;
 }
 
 interface DayGroup {
@@ -22,30 +20,15 @@ interface DayGroup {
 
 /** A match without a result within this window after kickoff is considered live. */
 const LIVE_WINDOW_MS = 150 * 60 * 1000;
-const TZ_KEY = 'wc2026.timezone';
-
-const localTimeFmt = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
-const localDateFmt = new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-const localZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-function loadTz(): 'fin' | 'local' {
-  try {
-    return localStorage.getItem(TZ_KEY) === 'local' ? 'local' : 'fin';
-  } catch {
-    return 'fin';
-  }
-}
 
 @Component({
   selector: 'app-root',
   imports: [BracketWheel, NgOptimizedImage],
   templateUrl: './app.html',
   styleUrl: './app.scss',
-  host: { '(document:keydown.escape)': 'pinnedId.set(null)' },
 })
 export class App {
   private readonly feed = inject(KnockoutFeed);
-  protected readonly predictions = inject(Predictions);
 
   /** Match data, refreshed every minute from the live score feed. */
   protected readonly matches = this.feed.matches;
@@ -53,14 +36,8 @@ export class App {
   /** Ticks every 30 s so the countdown and LIVE badge stay fresh. */
   private readonly now = signal(Date.now());
 
-  /** Hover previews the highlight; clicking a fixture pins it (Esc or re-click unpins). */
-  private readonly hoverId = signal<number | null>(null);
-  protected readonly pinnedId = signal<number | null>(null);
-  protected readonly highlighted = computed(() => this.pinnedId() ?? this.hoverId());
-
-  /** Kickoff times shown in Finland time (as published) or the viewer's local time. */
-  protected readonly tzMode = signal<'fin' | 'local'>(loadTz());
-  protected readonly tzLabel = computed(() => (this.tzMode() === 'fin' ? 'EEST (Helsinki)' : localZone));
+  /** Hovering a fixture highlights the matching wheel nodes (and vice versa). */
+  protected readonly highlighted = signal<number | null>(null);
 
   constructor() {
     const timer = setInterval(() => this.now.set(Date.now()), 30_000);
@@ -111,28 +88,23 @@ export class App {
     return `${m}m`;
   });
 
-  /** 16 matches grouped by day in the active timezone, newest → oldest */
+  /** 16 matches grouped by day in Helsinki time, newest → oldest */
   protected readonly days = computed<DayGroup[]>(() => {
-    const local = this.tzMode() === 'local';
     const liveIds = this.liveIds();
     const nextId = this.nextMatch()?.id ?? null;
-    const picks = this.predictions.picks();
     const sorted = [...this.matches()].sort((a, b) => b.koISO.localeCompare(a.koISO));
     const groups = new Map<string, FixtureRow[]>();
     for (const m of sorted) {
-      const ko = new Date(kickoffMs(m));
-      const date = local ? localDateFmt.format(ko).replace(',', '') : m.koDate;
       const row: FixtureRow = {
         match: m,
         winner: winnerOf(m),
-        time: local ? localTimeFmt.format(ko) : m.koTime,
+        time: m.koTime,
         live: liveIds.has(m.id),
         next: m.id === nextId,
-        pick: m.winner ? null : (picks[m.id] ?? null),
       };
-      const list = groups.get(date);
+      const list = groups.get(m.koDate);
       if (list) list.push(row);
-      else groups.set(date, [row]);
+      else groups.set(m.koDate, [row]);
     }
     return Array.from(groups, ([date, rows]) => ({ date, rows }));
   });
@@ -142,19 +114,6 @@ export class App {
   }
 
   protected setHover(id: number | null): void {
-    this.hoverId.set(id);
-  }
-
-  protected togglePin(id: number): void {
-    this.pinnedId.update((pinned) => (pinned === id ? null : id));
-  }
-
-  protected toggleTz(): void {
-    this.tzMode.update((mode) => (mode === 'fin' ? 'local' : 'fin'));
-    try {
-      localStorage.setItem(TZ_KEY, this.tzMode());
-    } catch {
-      /* storage unavailable — keep in-memory only */
-    }
+    this.highlighted.set(id);
   }
 }
