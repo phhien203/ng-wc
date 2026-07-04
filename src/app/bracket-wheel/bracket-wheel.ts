@@ -29,14 +29,13 @@ interface Link {
 const CX = 500;
 const CY = 500;
 const R_OUTER = 468;
-const R_R16 = 310;
-const R_QF = 196;
-const R_SF = 104;
+const R_R16 = 382;
+const R_QF = 282;
+const R_SF = 186;
+const R_F = 86;
 
-const SIZE_OUTER = 30;
-const SIZE_R16 = 27;
-const SIZE_QF = 24;
-const SIZE_SF = 19;
+/** Same node radius on every ring */
+const NODE_R = 26;
 
 /** The two teams of a match sit close together (in-pair gap < between-pair gap) */
 const PAIR_HOME = 0.57;
@@ -73,10 +72,8 @@ export class BracketWheel {
   readonly rR16 = R_R16;
   readonly rQf = R_QF;
   readonly rSf = R_SF;
-  readonly sizeOuter = SIZE_OUTER;
-  readonly sizeR16 = SIZE_R16;
-  readonly sizeQf = SIZE_QF;
-  readonly sizeSf = SIZE_SF;
+  readonly rF = R_F;
+  readonly nodeR = NODE_R;
 
   /** Currently hovered match (synced with the external list) */
   readonly hovered = input<number | null>(null);
@@ -104,11 +101,11 @@ export class BracketWheel {
       const next = m.id === nextId;
       const decided = !!m.winner;
       nodes.push({
-        team: m.home, x: h.x, y: h.y, r: SIZE_OUTER, matchId: m.id, altId: null, decided, next,
+        team: m.home, x: h.x, y: h.y, r: NODE_R, matchId: m.id, altId: null, decided, next,
         advancing: m.winner === 'home', tip,
       });
       nodes.push({
-        team: m.away, x: a.x, y: a.y, r: SIZE_OUTER, matchId: m.id, altId: null, decided, next,
+        team: m.away, x: a.x, y: a.y, r: NODE_R, matchId: m.id, altId: null, decided, next,
         advancing: m.winner === 'away', tip,
       });
     });
@@ -139,7 +136,7 @@ export class BracketWheel {
       for (const [side, k] of [['home', 2 * j], ['away', 2 * j + 1]] as const) {
         const p = polar(R_R16, (k + 0.5) * (360 / 16));
         nodes.push({
-          team: m[side], x: p.x, y: p.y, r: SIZE_R16,
+          team: m[side], x: p.x, y: p.y, r: NODE_R,
           matchId: m.id, altId: r32[k]?.id ?? null,
           decided: !!m.winner, next: m.id === nextId,
           advancing: m.winner === side, tip,
@@ -162,19 +159,24 @@ export class BracketWheel {
     });
   });
 
-  /** R32 → R16 links — slight curve for a softer look */
+  /** R32 → R16 links — converging curve, one per R32 team (same look as the inner links) */
   protected readonly r16Links = computed<Link[]>(() => {
     const r16 = this.r16();
-    return this.r32().map((m, k) => {
-      const a = (k + 0.5) * (360 / 16);
-      const rOut = R_OUTER - SIZE_OUTER - 5;
-      const rIn = R_R16 + SIZE_R16 + 5;
-      return {
-        d: curve(rOut, a, (rOut + rIn) / 2, a + 5, rIn, a),
-        matchId: m.id, altId: r16[Math.floor(k / 2)]?.id ?? null,
-        decided: !!m.winner, next: false,
-      };
+    const links: Link[] = [];
+    this.r32().forEach((m, k) => {
+      const aR16 = (k + 0.5) * (360 / 16);
+      const rOut = R_OUTER - NODE_R - 4;
+      const rIn = R_R16 + NODE_R + 4;
+      const altId = r16[Math.floor(k / 2)]?.id ?? null;
+      for (const pos of [PAIR_HOME, PAIR_AWAY]) {
+        const a = (2 * k + pos) * (360 / 32);
+        links.push({
+          d: curve(rOut, a, (rOut + rIn) / 2, (a + aR16) / 2, rIn, aR16),
+          matchId: m.id, altId, decided: !!m.winner, next: false,
+        });
+      }
     });
+    return links;
   });
 
   /** Quarterfinal ring: 8 slots — R16 winners once decided */
@@ -183,7 +185,7 @@ export class BracketWheel {
       const p = polar(R_QF, (j + 0.5) * (360 / 8));
       const w = winnerOf(m);
       return {
-        team: w, x: p.x, y: p.y, r: SIZE_QF, matchId: m.id, altId: null,
+        team: w, x: p.x, y: p.y, r: NODE_R, matchId: m.id, altId: null,
         decided: !!w, next: false, advancing: !!w,
         tip: w ? `${w.name} → Quarterfinals` : 'Quarterfinal — to be decided',
       };
@@ -198,8 +200,8 @@ export class BracketWheel {
       const m = r16[Math.floor(k / 2)];
       const aIn = (k + 0.5) * (360 / 16);
       const aQf = (Math.floor(k / 2) + 0.5) * (360 / 8);
-      const rIn = R_R16 - SIZE_R16 - 4;
-      const rQf = R_QF + SIZE_QF + 4;
+      const rIn = R_R16 - NODE_R - 4;
+      const rQf = R_QF + NODE_R + 4;
       links.push({
         d: curve(rIn, aIn, (rIn + rQf) / 2, (aIn + aQf) / 2, rQf, aQf),
         matchId: m?.id ?? null, altId: null, decided: !!m?.winner, next: false,
@@ -213,7 +215,7 @@ export class BracketWheel {
     return Array.from({ length: 4 }, (_, j) => {
       const p = polar(R_SF, (j + 0.5) * (360 / 4));
       return {
-        team: null, x: p.x, y: p.y, r: SIZE_SF, matchId: null, altId: null,
+        team: null, x: p.x, y: p.y, r: NODE_R, matchId: null, altId: null,
         decided: false, next: false, advancing: false,
         tip: 'Semifinal — to be decided',
       };
@@ -226,10 +228,38 @@ export class BracketWheel {
     for (let k = 0; k < 8; k++) {
       const aQf = (k + 0.5) * (360 / 8);
       const aSf = (Math.floor(k / 2) + 0.5) * (360 / 4);
-      const rQf = R_QF - SIZE_QF - 4;
-      const rSf = R_SF + SIZE_SF + 4;
+      const rQf = R_QF - NODE_R - 4;
+      const rSf = R_SF + NODE_R + 4;
       links.push({
         d: curve(rQf, aQf, (rQf + rSf) / 2, (aQf + aSf) / 2, rSf, aSf),
+        matchId: null, altId: null, decided: false, next: false,
+      });
+    }
+    return links;
+  });
+
+  /** Center ring: the 2 Final slots (TBD), flanking the trophy */
+  protected readonly finalNodes = computed<RNode[]>(() => {
+    return Array.from({ length: 2 }, (_, j) => {
+      const p = polar(R_F, (j + 0.5) * (360 / 2));
+      return {
+        team: null, x: p.x, y: p.y, r: NODE_R, matchId: null, altId: null,
+        decided: false, next: false, advancing: false,
+        tip: 'Final — to be decided',
+      };
+    });
+  });
+
+  /** Semifinal → Final links — converging curve (always dashed, not played yet) */
+  protected readonly finalLinks = computed<Link[]>(() => {
+    const links: Link[] = [];
+    for (let k = 0; k < 4; k++) {
+      const aSf = (k + 0.5) * (360 / 4);
+      const aF = (Math.floor(k / 2) + 0.5) * (360 / 2);
+      const rSf = R_SF - NODE_R - 4;
+      const rF = R_F + NODE_R + 4;
+      links.push({
+        d: curve(rSf, aSf, (rSf + rF) / 2, (aSf + aF) / 2, rF, aF),
         matchId: null, altId: null, decided: false, next: false,
       });
     }

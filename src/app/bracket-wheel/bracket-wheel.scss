@@ -122,21 +122,6 @@ svg {
   }
 }
 
-.ring.r16 .qmark {
-  font-size: 28px;
-}
-
-.ring.qf .qmark {
-  font-size: 24px;
-}
-
-.ring.qf .code {
-  font-size: 12px;
-}
-
-.ring.sf .qmark {
-  font-size: 20px;
-}
 
 /* ---- links (all curves: fill must be none) ---- */
 .match-link,
@@ -168,10 +153,6 @@ svg {
 .link {
   stroke-width: 1.8;
   transition: opacity 0.25s ease;
-
-  &.decided {
-    stroke: var(--win);
-  }
 
   &.future {
     stroke: #313c54;
