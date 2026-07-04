@@ -60,13 +60,26 @@
       </section>
     }
 
-    <app-fixture-list
-      [matches]="matches()"
-      [liveIds]="liveIds()"
-      [nextId]="nextMatch()?.id ?? null"
-      [highlighted]="highlighted()"
-      (hoverChange)="setHover($event)"
-    />
+    <div class="fixtures">
+      <p class="hint">All times EEST (Helsinki)</p>
+      <app-fixture-list
+        title="Round of 16"
+        [matches]="r16Matches()"
+        [liveIds]="liveIds()"
+        [nextId]="nextMatch()?.id ?? null"
+        [highlighted]="highlighted()"
+        (hoverChange)="setHover($event)"
+      />
+      <app-fixture-list
+        title="Round of 32"
+        [expanded]="false"
+        [matches]="r32Matches()"
+        [liveIds]="liveIds()"
+        [nextId]="nextMatch()?.id ?? null"
+        [highlighted]="highlighted()"
+        (hoverChange)="setHover($event)"
+      />
+    </div>
   </aside>
 
   <div class="stage">

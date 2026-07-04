@@ -1,10 +1,10 @@
 /**
  * REAL World Cup 2026 knockout data (Canada/Mexico/USA).
- * Source: Yahoo Sports & CBS Sports — Round of 32 bracket, updated Jun 30, 2026.
- * Some matches already have results; the rest are not played yet (winner = undefined).
+ * Source: Yahoo Sports & CBS Sports — updated Jul 4, 2026:
+ * Round of 32 is complete; the Round of 16 (Jul 4–7) is scheduled.
  *
- * The 16 matches are ordered to follow the actual bracket, so:
- *   - pairs (M1,M2),(M3,M4)... meet in the Round of 16
+ * Matches are ordered to follow the actual bracket, so:
+ *   - R32 pairs (M1,M2),(M3,M4)... meet in the Round of 16
  *   - consecutive R16 pairs meet in the Quarterfinals
  * To update a result: just set `winner` on the match.
  */
@@ -20,8 +20,12 @@ export interface Team {
 
 export type Side = 'home' | 'away';
 
+export type Round = 'R32' | 'R16';
+
 export interface Match {
   id: number;
+  /** Knockout round this match belongs to */
+  round: Round;
   home: Team;
   away: Team;
   /** Winning team (once decided). undefined = not finished yet. */
@@ -76,11 +80,14 @@ const T = {
   GHA: { code: 'GHA', name: 'Ghana',                  flag: 'gh' },
 } satisfies Record<string, Team>;
 
+/** A match as written in the tables below — `round` is stamped on per array. */
+type MatchSeed = Omit<Match, 'round'>;
+
 /**
- * The 16 Round of 32 matches, in true bracket order.
- * For readability, the winner (when known) is placed as `home`.
+ * The 16 Round of 32 matches, in true bracket order. All played.
  */
-export const ROUND_OF_32: Match[] = [
+// prettier-ignore
+const R32_SEED: MatchSeed[] = [
   { id: 1,  home: T.PAR, away: T.GER, winner: 'home', note: '1-1 (pen 4-3)', koDate: 'Mon Jun 29', koTime: '23:30', koISO: '2026-06-29T23:30' },
   { id: 2,  home: T.FRA, away: T.SWE, winner: 'home', note: '3-0',           koDate: 'Wed Jul 1',  koTime: '00:00', koISO: '2026-07-01T00:00' },
   { id: 3,  home: T.CAN, away: T.RSA, winner: 'home', note: '1-0',           koDate: 'Sun Jun 28', koTime: '22:00', koISO: '2026-06-28T22:00' },
@@ -89,15 +96,38 @@ export const ROUND_OF_32: Match[] = [
   { id: 6,  home: T.CIV, away: T.NOR, winner: 'away', note: '1-2',           koDate: 'Tue Jun 30', koTime: '20:00', koISO: '2026-06-30T20:00' },
   { id: 7,  home: T.MEX, away: T.ECU, winner: 'home', note: '2-0',           koDate: 'Wed Jul 1',  koTime: '04:00', koISO: '2026-07-01T04:00' },
   { id: 8,  home: T.ENG, away: T.COD, winner: 'home', note: '2-1',           koDate: 'Wed Jul 1',  koTime: '19:00', koISO: '2026-07-01T19:00' },
-  { id: 9,  home: T.ESP, away: T.AUT,                                        koDate: 'Thu Jul 2',  koTime: '22:00', koISO: '2026-07-02T22:00' },
-  { id: 10, home: T.POR, away: T.CRO,                                        koDate: 'Fri Jul 3',  koTime: '02:00', koISO: '2026-07-03T02:00' },
-  { id: 11, home: T.BEL, away: T.SEN,                                        koDate: 'Wed Jul 1',  koTime: '23:00', koISO: '2026-07-01T23:00' },
-  { id: 12, home: T.USA, away: T.BIH,                                        koDate: 'Thu Jul 2',  koTime: '03:00', koISO: '2026-07-02T03:00' },
-  { id: 13, home: T.AUS, away: T.EGY,                                        koDate: 'Fri Jul 3',  koTime: '21:00', koISO: '2026-07-03T21:00' },
-  { id: 14, home: T.ARG, away: T.CPV,                                        koDate: 'Sat Jul 4',  koTime: '01:00', koISO: '2026-07-04T01:00' },
-  { id: 15, home: T.SUI, away: T.ALG,                                        koDate: 'Fri Jul 3',  koTime: '06:00', koISO: '2026-07-03T06:00' },
-  { id: 16, home: T.COL, away: T.GHA,                                        koDate: 'Sat Jul 4',  koTime: '04:30', koISO: '2026-07-04T04:30' },
+  { id: 9,  home: T.ESP, away: T.AUT, winner: 'home', note: '3-0',           koDate: 'Thu Jul 2',  koTime: '22:00', koISO: '2026-07-02T22:00' },
+  { id: 10, home: T.POR, away: T.CRO, winner: 'home', note: '2-1',           koDate: 'Fri Jul 3',  koTime: '02:00', koISO: '2026-07-03T02:00' },
+  { id: 11, home: T.BEL, away: T.SEN, winner: 'home', note: '3-2 (aet)',     koDate: 'Wed Jul 1',  koTime: '23:00', koISO: '2026-07-01T23:00' },
+  { id: 12, home: T.USA, away: T.BIH, winner: 'home', note: '2-0',           koDate: 'Thu Jul 2',  koTime: '03:00', koISO: '2026-07-02T03:00' },
+  { id: 13, home: T.AUS, away: T.EGY, winner: 'away', note: '1-1 (pen 2-4)', koDate: 'Fri Jul 3',  koTime: '21:00', koISO: '2026-07-03T21:00' },
+  { id: 14, home: T.ARG, away: T.CPV, winner: 'home', note: '3-2 (aet)',     koDate: 'Sat Jul 4',  koTime: '01:00', koISO: '2026-07-04T01:00' },
+  { id: 15, home: T.SUI, away: T.ALG, winner: 'home', note: '2-0',           koDate: 'Fri Jul 3',  koTime: '06:00', koISO: '2026-07-03T06:00' },
+  { id: 16, home: T.COL, away: T.GHA, winner: 'home', note: '1-0',           koDate: 'Sat Jul 4',  koTime: '04:30', koISO: '2026-07-04T04:30' },
 ];
+
+/**
+ * The 8 Round of 16 matches (Jul 4–7), in true bracket order:
+ * match j pairs the winners of R32 matches (2j+1, 2j+2), and `home` is
+ * always the winner of the first match of that pair (matters for the wheel).
+ */
+// prettier-ignore
+const R16_SEED: MatchSeed[] = [
+  { id: 17, home: T.PAR, away: T.FRA, koDate: 'Sun Jul 5', koTime: '00:00', koISO: '2026-07-05T00:00' },
+  { id: 18, home: T.CAN, away: T.MAR, koDate: 'Sat Jul 4', koTime: '20:00', koISO: '2026-07-04T20:00' },
+  { id: 19, home: T.BRA, away: T.NOR, koDate: 'Sun Jul 5', koTime: '23:00', koISO: '2026-07-05T23:00' },
+  { id: 20, home: T.MEX, away: T.ENG, koDate: 'Mon Jul 6', koTime: '03:00', koISO: '2026-07-06T03:00' },
+  { id: 21, home: T.ESP, away: T.POR, koDate: 'Mon Jul 6', koTime: '22:00', koISO: '2026-07-06T22:00' },
+  { id: 22, home: T.BEL, away: T.USA, koDate: 'Tue Jul 7', koTime: '03:00', koISO: '2026-07-07T03:00' },
+  { id: 23, home: T.EGY, away: T.ARG, koDate: 'Tue Jul 7', koTime: '19:00', koISO: '2026-07-07T19:00' },
+  { id: 24, home: T.SUI, away: T.COL, koDate: 'Tue Jul 7', koTime: '23:00', koISO: '2026-07-07T23:00' },
+];
+
+export const ROUND_OF_32: Match[] = R32_SEED.map((m) => ({ ...m, round: 'R32' }));
+export const ROUND_OF_16: Match[] = R16_SEED.map((m) => ({ ...m, round: 'R16' }));
+
+/** All knockout matches known so far, bracket-ordered within each round. */
+export const KNOCKOUT_MATCHES: Match[] = [...ROUND_OF_32, ...ROUND_OF_16];
 
 /** The winning team of a match, or null if not finished yet. */
 export function winnerOf(m: Match): Team | null {

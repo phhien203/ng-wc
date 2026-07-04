@@ -21,9 +21,13 @@ interface DayGroup {
   imports: [NgOptimizedImage],
   templateUrl: './fixture-list.html',
   styleUrl: './fixture-list.scss',
-  host: { role: 'region', 'aria-label': 'Round of 32 fixtures' },
+  host: { role: 'region', '[attr.aria-label]': 'title() + " fixtures"' },
 })
 export class FixtureList {
+  /** Round title shown in the collapsible header, e.g. "Round of 16" */
+  readonly title = input.required<string>();
+  /** Whether the collapsible starts open */
+  readonly expanded = input(true);
   readonly matches = input.required<Match[]>();
   /** Matches currently in progress */
   readonly liveIds = input<ReadonlySet<number>>(new Set());
@@ -34,7 +38,7 @@ export class FixtureList {
   /** Hovering or focusing a fixture row */
   readonly hoverChange = output<number | null>();
 
-  /** 16 matches grouped by day in Helsinki time, newest → oldest */
+  /** Matches grouped by day in Helsinki time, newest → oldest */
   protected readonly days = computed<DayGroup[]>(() => {
     const liveIds = this.liveIds();
     const nextId = this.nextId();

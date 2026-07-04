@@ -18,7 +18,7 @@ export interface EspnCompetitor {
 }
 
 export const SCOREBOARD_URL =
-  'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=20260628-20260705';
+  'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=20260628-20260708';
 
 function pairKey(a: string, b: string): string {
   return [a, b].sort().join('|');
@@ -29,7 +29,7 @@ function pairKey(a: string, b: string): string {
  *
  * Matching is by unordered team-code pair because ESPN's home/away is often
  * flipped vs the bracket (scores/pens are re-oriented to our home/away).
- * Events for pairs the bracket doesn't know (e.g. Round of 16) are ignored,
+ * Events for pairs the bracket doesn't know (e.g. later rounds) are ignored,
  * as are bracket matches missing from the payload.
  */
 export function mergeScoreboard(bracket: Match[], scoreboard: EspnScoreboard): Match[] {

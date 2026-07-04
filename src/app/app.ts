@@ -17,8 +17,11 @@ const LIVE_WINDOW_MS = 150 * 60 * 1000;
 export class App {
   private readonly feed = inject(KnockoutFeed);
 
-  /** Match data, refreshed every minute from the live score feed. */
+  /** Match data (all knockout rounds), refreshed every minute from the live score feed. */
   protected readonly matches = this.feed.matches;
+
+  protected readonly r32Matches = computed(() => this.matches().filter((m) => m.round === 'R32'));
+  protected readonly r16Matches = computed(() => this.matches().filter((m) => m.round === 'R16'));
 
   /** Ticks every 30 s so the countdown and LIVE badge stay fresh. */
   private readonly now = signal(Date.now());

@@ -1,5 +1,5 @@
 import { EspnEvent, EspnScoreboard, mergeScoreboard } from './espn-scoreboard';
-import { ROUND_OF_32 } from './knockout-data';
+import { KNOCKOUT_MATCHES } from './knockout-data';
 
 interface Comp {
   code: string;
@@ -32,20 +32,20 @@ describe('mergeScoreboard', () => {
         { code: 'GER', score: '1', pen: 3 },
         { code: 'PAR', score: '1', pen: 4, winner: true },
       ]),
-      // in progress
+      // Round of 16 match in progress, flipped vs the bracket (bracket has CAN home)
       event('in', "12'", [
-        { code: 'BEL', score: '1' },
-        { code: 'SEN', score: '0' },
-      ]),
-      // unknown pair (Round of 16) must be ignored
-      event('post', 'FT', [
-        { code: 'CAN', score: '2', winner: true },
         { code: 'MAR', score: '0' },
+        { code: 'CAN', score: '1' },
+      ]),
+      // unknown pair (a possible Quarterfinal) must be ignored
+      event('post', 'FT', [
+        { code: 'BRA', score: '2', winner: true },
+        { code: 'ENG', score: '0' },
       ]),
     ],
   };
 
-  const merged = mergeScoreboard(ROUND_OF_32, scoreboard);
+  const merged = mergeScoreboard(KNOCKOUT_MATCHES, scoreboard);
 
   it('re-orients results to the bracket home/away and formats penalties', () => {
     const m1 = merged.find((m) => m.id === 1)!;
@@ -55,20 +55,22 @@ describe('mergeScoreboard', () => {
   });
 
   it('adds a live note for in-progress matches without setting a winner', () => {
-    const m11 = merged.find((m) => m.id === 11)!;
-    expect(m11.liveNote).toBe("1-0 · 12'");
-    expect(m11.state).toBe('in');
-    expect(m11.winner).toBeUndefined();
+    const m18 = merged.find((m) => m.id === 18)!; // CAN vs MAR in the bracket
+    expect(m18.liveNote).toBe("1-0 · 12'"); // re-oriented: CAN is home
+    expect(m18.state).toBe('in');
+    expect(m18.winner).toBeUndefined();
   });
 
   it('leaves matches absent from the payload untouched', () => {
-    const m16 = merged.find((m) => m.id === 16)!;
-    expect(m16.state).toBeUndefined();
-    expect(m16.winner).toBeUndefined();
+    const m24 = merged.find((m) => m.id === 24)!; // SUI vs COL, not in the payload
+    expect(m24.state).toBeUndefined();
+    expect(m24.winner).toBeUndefined();
   });
 
-  it('does not corrupt known matches with unknown pairs (CAN vs MAR is Round of 16)', () => {
-    const canMatch = merged.find((m) => m.id === 3)!; // CAN vs RSA in the bracket
-    expect(canMatch.note).toBe('1-0'); // bundled note, not the R16 result
+  it('does not corrupt known matches with unknown pairs (BRA vs ENG is a Quarterfinal)', () => {
+    const braMatch = merged.find((m) => m.id === 19)!; // BRA vs NOR in the bracket
+    expect(braMatch.winner).toBeUndefined();
+    const engMatch = merged.find((m) => m.id === 20)!; // MEX vs ENG in the bracket
+    expect(engMatch.winner).toBeUndefined();
   });
 });

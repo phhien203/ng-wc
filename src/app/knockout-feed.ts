@@ -4,7 +4,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs/operators';
 
 import { EspnScoreboard, SCOREBOARD_URL, mergeScoreboard } from './espn-scoreboard';
-import { Match, ROUND_OF_32 } from './knockout-data';
+import { KNOCKOUT_MATCHES, Match } from './knockout-data';
 import { poll } from './poll.operator';
 
 /**
@@ -21,7 +21,7 @@ export class KnockoutFeed {
 
   private readonly fetch$ = this.http
     .get<EspnScoreboard>(SCOREBOARD_URL)
-    .pipe(map((scoreboard) => mergeScoreboard(ROUND_OF_32, scoreboard)));
+    .pipe(map((scoreboard) => mergeScoreboard(KNOCKOUT_MATCHES, scoreboard)));
 
   /**
    * Signal of matches, updated every minute.
@@ -30,7 +30,7 @@ export class KnockoutFeed {
   readonly matches: Signal<Match[]> = toSignal(
     this.fetch$.pipe(poll<Match[]>({ period: 60_000 })),
     {
-      initialValue: ROUND_OF_32,
+      initialValue: KNOCKOUT_MATCHES,
     },
   );
 }

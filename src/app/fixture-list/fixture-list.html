@@ -1,5 +1,10 @@
-<h2>Round of 32</h2>
-<p class="hint">All times EEST (Helsinki)</p>
+<details [open]="expanded()">
+  <summary>
+    <h2>{{ title() }}</h2>
+    <svg class="chevron" aria-hidden="true" viewBox="0 0 12 12" width="12" height="12">
+      <path d="M2 4 L6 8 L10 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+    </svg>
+  </summary>
 
 @for (day of days(); track day.date) {
   <p class="day">{{ day.date }}</p>
@@ -54,3 +59,4 @@
     }
   </ul>
 }
+</details>

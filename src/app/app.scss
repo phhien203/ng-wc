@@ -104,6 +104,43 @@
   }
 }
 
+/* ---------- collapsible fixture lists ---------- */
+.fixtures {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+
+  /* thin scrollbar, matching the dark theme */
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--line);
+    border-radius: 8px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: #3a4660;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .hint {
+    margin: 0;
+    font-family: var(--font-sport);
+    font-size: 0.68rem;
+    color: #5d6a86;
+  }
+}
+
 .source {
   margin: 0.5rem 0 0;
   font-family: var(--font-sport);
@@ -138,5 +175,9 @@
   .sidebar {
     flex: none;
     width: 100%;
+  }
+  .fixtures {
+    overflow: visible;
+    padding-right: 0;
   }
 }
