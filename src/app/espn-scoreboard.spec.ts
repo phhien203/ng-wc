@@ -1,5 +1,5 @@
 import { EspnEvent, EspnScoreboard, mergeScoreboard } from './espn-scoreboard';
-import { KNOCKOUT_MATCHES } from './knockout-data';
+import { KNOCKOUT_MATCHES, TBD } from './knockout-data';
 
 interface Comp {
   code: string;
@@ -72,5 +72,13 @@ describe('mergeScoreboard', () => {
     expect(braMatch.winner).toBeUndefined();
     const engMatch = merged.find((m) => m.id === 20)!; // MEX vs ENG in the bracket
     expect(engMatch.winner).toBeUndefined();
+  });
+
+  it('leaves Quarterfinals with TBD teams untouched even when events are present', () => {
+    const qf = merged.find((m) => m.id === 25)!;
+    expect(qf.home).toBe(TBD);
+    expect(qf.away).toBe(TBD);
+    expect(qf.state).toBeUndefined();
+    expect(qf.winner).toBeUndefined();
   });
 });

@@ -22,6 +22,7 @@ export class App {
 
   protected readonly r32Matches = computed(() => this.matches().filter((m) => m.round === 'R32'));
   protected readonly r16Matches = computed(() => this.matches().filter((m) => m.round === 'R16'));
+  protected readonly qfMatches = computed(() => this.matches().filter((m) => m.round === 'QF'));
 
   /** Ticks every 30 s so the countdown and LIVE badge stay fresh. */
   private readonly now = signal(Date.now());

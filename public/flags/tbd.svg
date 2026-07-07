@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="flag-icons-tbd" viewBox="0 0 640 480">
+  <path fill="#3a4150" d="M0 0h640v480H0z"/>
+  <path fill="#4c5567" d="M0 0h640v480L0 0z"/>
+  <text x="320" y="308" fill="#e8ebf2" font-family="system-ui, sans-serif" font-size="160" font-weight="700" text-anchor="middle">?</text>
+</svg>

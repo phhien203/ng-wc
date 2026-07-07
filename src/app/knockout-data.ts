@@ -1,12 +1,15 @@
 /**
  * REAL World Cup 2026 knockout data (Canada/Mexico/USA).
- * Source: Yahoo Sports & CBS Sports — updated Jul 4, 2026:
- * Round of 32 is complete; the Round of 16 (Jul 4–7) is scheduled.
+ * Source: Yahoo Sports & CBS Sports — updated Jul 7, 2026:
+ * Round of 32 is complete; the Round of 16 (Jul 4–7) and the
+ * Quarterfinals (Jul 9–13 Finland time) are scheduled.
  *
  * Matches are ordered to follow the actual bracket, so:
  *   - R32 pairs (M1,M2),(M3,M4)... meet in the Round of 16
  *   - consecutive R16 pairs meet in the Quarterfinals
- * To update a result: just set `winner` on the match.
+ * To update a result: just set `winner` on the match. Quarterfinal
+ * teams are not stored here — `withQfTeams` derives them from the
+ * R16 winners (TBD until the feeder match is decided).
  */
 
 export interface Team {
@@ -20,7 +23,7 @@ export interface Team {
 
 export type Side = 'home' | 'away';
 
-export type Round = 'R32' | 'R16';
+export type Round = 'R32' | 'R16' | 'QF';
 
 export interface Match {
   id: number;
@@ -123,11 +126,47 @@ const R16_SEED: MatchSeed[] = [
   { id: 24, home: T.SUI, away: T.COL, koDate: 'Tue Jul 7', koTime: '23:00', koISO: '2026-07-07T23:00' },
 ];
 
+/** Placeholder team for a Quarterfinal slot whose feeder match is undecided. */
+export const TBD: Team = { code: 'TBD', name: 'To be decided', flag: 'tbd' };
+
+/**
+ * The 4 Quarterfinals (Jul 9–13 Finland time), in true bracket order:
+ * match j pairs the winners of R16 matches (2j+17, 2j+18); `home` is the
+ * winner of the first feeder. Only the schedule lives here — teams are
+ * filled in by `withQfTeams`.
+ */
+// prettier-ignore
+const QF_SEED: Omit<MatchSeed, 'home' | 'away'>[] = [
+  { id: 25, koDate: 'Thu Jul 9',  koTime: '23:00', koISO: '2026-07-09T23:00' },
+  { id: 26, koDate: 'Sun Jul 12', koTime: '00:00', koISO: '2026-07-12T00:00' },
+  { id: 27, koDate: 'Fri Jul 10', koTime: '22:00', koISO: '2026-07-10T22:00' },
+  { id: 28, koDate: 'Mon Jul 13', koTime: '04:00', koISO: '2026-07-13T04:00' },
+];
+
 export const ROUND_OF_32: Match[] = R32_SEED.map((m) => ({ ...m, round: 'R32' }));
 export const ROUND_OF_16: Match[] = R16_SEED.map((m) => ({ ...m, round: 'R16' }));
+export const QUARTERFINALS: Match[] = QF_SEED.map((m) => ({ ...m, round: 'QF', home: TBD, away: TBD }));
 
 /** All knockout matches known so far, bracket-ordered within each round. */
-export const KNOCKOUT_MATCHES: Match[] = [...ROUND_OF_32, ...ROUND_OF_16];
+export const KNOCKOUT_MATCHES: Match[] = [...ROUND_OF_32, ...ROUND_OF_16, ...QUARTERFINALS];
+
+/**
+ * Fill each Quarterfinal's `home`/`away` from the winners of its two R16
+ * feeder matches (2j+17, 2j+18), leaving `TBD` while a feeder is undecided.
+ * Pure: reads winners from `matches` itself, so live R16 results flow through.
+ */
+export function withQfTeams(matches: Match[]): Match[] {
+  const byId = new Map(matches.map((m) => [m.id, m]));
+  const feederWinner = (id: number): Team => {
+    const feeder = byId.get(id);
+    return (feeder && winnerOf(feeder)) || TBD;
+  };
+  return matches.map((m) => {
+    if (m.round !== 'QF') return m;
+    const j = m.id - 25;
+    return { ...m, home: feederWinner(2 * j + 17), away: feederWinner(2 * j + 18) };
+  });
+}
 
 /** The winning team of a match, or null if not finished yet. */
 export function winnerOf(m: Match): Team | null {

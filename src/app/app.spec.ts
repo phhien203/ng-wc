@@ -23,4 +23,19 @@ describe('App', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain('KnockoutBracket');
   });
+
+  it('renders a Quarterfinals section with 4 TBD fixtures and accessible flag alt text', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const sections = Array.from(compiled.querySelectorAll('app-fixture-list'));
+    const qf = sections.find((s) => s.querySelector('h2')?.textContent === 'Quarterfinals');
+    expect(qf).toBeTruthy();
+    const rows = qf!.querySelectorAll('li.fixture');
+    expect(rows.length).toBe(4);
+    for (const img of qf!.querySelectorAll('img.flag')) {
+      expect(img.getAttribute('alt')).toBe('To be decided');
+      expect(img.getAttribute('src')).toContain('flags/tbd.svg');
+    }
+  });
 });
