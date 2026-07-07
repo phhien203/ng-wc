@@ -13,6 +13,8 @@ interface RNode {
   advancing: boolean;
   /** Part of the next match to kick off */
   next: boolean;
+  /** Part of a match currently in progress */
+  live: boolean;
   decided: boolean;
   tip: string;
 }
@@ -24,6 +26,7 @@ interface Link {
   altId: number | null;
   decided: boolean;
   next: boolean;
+  live: boolean;
 }
 
 const CX = 500;
@@ -85,12 +88,17 @@ export class BracketWheel {
   /** The next match to kick off (pulsing highlight) */
   readonly nextId = input<number | null>(null);
 
+  /** Matches currently in progress (pulsing highlight on both teams) */
+  readonly liveIds = input<ReadonlySet<number>>(new Set());
+
   private readonly r32 = computed(() => this.matches().filter((m) => m.round === 'R32'));
   private readonly r16 = computed(() => this.matches().filter((m) => m.round === 'R16'));
+  private readonly qf = computed(() => this.matches().filter((m) => m.round === 'QF'));
 
   /** Outer ring: 32 teams (Round of 32) */
   protected readonly outerNodes = computed<RNode[]>(() => {
     const nextId = this.nextId();
+    const liveIds = this.liveIds();
     const nodes: RNode[] = [];
     this.r32().forEach((m, k) => {
       const homeA = (2 * k + PAIR_HOME) * (360 / 32);
@@ -99,13 +107,14 @@ export class BracketWheel {
       const a = polar(R_OUTER, awayA);
       const tip = tipOf(m);
       const next = m.id === nextId;
+      const live = liveIds.has(m.id);
       const decided = !!m.winner;
       nodes.push({
-        team: m.home, x: h.x, y: h.y, r: NODE_R, matchId: m.id, altId: null, decided, next,
+        team: m.home, x: h.x, y: h.y, r: NODE_R, matchId: m.id, altId: null, decided, next, live,
         advancing: m.winner === 'home', tip,
       });
       nodes.push({
-        team: m.away, x: a.x, y: a.y, r: NODE_R, matchId: m.id, altId: null, decided, next,
+        team: m.away, x: a.x, y: a.y, r: NODE_R, matchId: m.id, altId: null, decided, next, live,
         advancing: m.winner === 'away', tip,
       });
     });
@@ -115,6 +124,7 @@ export class BracketWheel {
   /** Link between the two teams of each R32 match — arc bulging outward */
   protected readonly matchLinks = computed<Link[]>(() => {
     const nextId = this.nextId();
+    const liveIds = this.liveIds();
     return this.r32().map((m, k) => {
       const homeA = (2 * k + PAIR_HOME) * (360 / 32);
       const awayA = (2 * k + PAIR_AWAY) * (360 / 32);
@@ -122,6 +132,7 @@ export class BracketWheel {
       return {
         d: curve(R_OUTER, homeA, R_OUTER + 26, midA, R_OUTER, awayA),
         matchId: m.id, altId: null, decided: !!m.winner, next: m.id === nextId,
+        live: liveIds.has(m.id),
       };
     });
   });
@@ -129,6 +140,7 @@ export class BracketWheel {
   /** Middle ring: 16 Round of 16 teams — home/away of the 8 real R16 matches */
   protected readonly r16Nodes = computed<RNode[]>(() => {
     const nextId = this.nextId();
+    const liveIds = this.liveIds();
     const r32 = this.r32();
     const nodes: RNode[] = [];
     this.r16().forEach((m, j) => {
@@ -138,7 +150,7 @@ export class BracketWheel {
         nodes.push({
           team: m[side], x: p.x, y: p.y, r: NODE_R,
           matchId: m.id, altId: r32[k]?.id ?? null,
-          decided: !!m.winner, next: m.id === nextId,
+          decided: !!m.winner, next: m.id === nextId, live: liveIds.has(m.id),
           advancing: m.winner === side, tip,
         });
       }
@@ -149,12 +161,14 @@ export class BracketWheel {
   /** Link between the two teams of each R16 match — arc bulging outward */
   protected readonly r16MatchLinks = computed<Link[]>(() => {
     const nextId = this.nextId();
+    const liveIds = this.liveIds();
     return this.r16().map((m, j) => {
       const homeA = (2 * j + 0.5) * (360 / 16);
       const awayA = (2 * j + 1.5) * (360 / 16);
       return {
         d: curve(R_R16, homeA, R_R16 + 24, (homeA + awayA) / 2, R_R16, awayA),
         matchId: m.id, altId: null, decided: !!m.winner, next: m.id === nextId,
+        live: liveIds.has(m.id),
       };
     });
   });
@@ -172,7 +186,7 @@ export class BracketWheel {
         const a = (2 * k + pos) * (360 / 32);
         links.push({
           d: curve(rOut, a, (rOut + rIn) / 2, (a + aR16) / 2, rIn, aR16),
-          matchId: m.id, altId, decided: !!m.winner, next: false,
+          matchId: m.id, altId, decided: !!m.winner, next: false, live: false,
         });
       }
     });
@@ -181,12 +195,18 @@ export class BracketWheel {
 
   /** Quarterfinal ring: 8 slots — R16 winners once decided */
   protected readonly qfNodes = computed<RNode[]>(() => {
+    const nextId = this.nextId();
+    const liveIds = this.liveIds();
+    const qf = this.qf();
     return this.r16().map((m, j) => {
       const p = polar(R_QF, (j + 0.5) * (360 / 8));
       const w = winnerOf(m);
+      // consecutive R16 winners meet in the same Quarterfinal (bracket order)
+      const qfMatch = qf[Math.floor(j / 2)] ?? null;
       return {
         team: w, x: p.x, y: p.y, r: NODE_R, matchId: m.id, altId: null,
-        decided: !!w, next: false, advancing: !!w,
+        decided: !!w, next: qfMatch?.id === nextId, live: qfMatch !== null && liveIds.has(qfMatch.id),
+        advancing: !!w,
         tip: w ? `${w.name} → Quarterfinals` : 'Quarterfinal — to be decided',
       };
     });
@@ -204,7 +224,7 @@ export class BracketWheel {
       const rQf = R_QF + NODE_R + 4;
       links.push({
         d: curve(rIn, aIn, (rIn + rQf) / 2, (aIn + aQf) / 2, rQf, aQf),
-        matchId: m?.id ?? null, altId: null, decided: !!m?.winner, next: false,
+        matchId: m?.id ?? null, altId: null, decided: !!m?.winner, next: false, live: false,
       });
     }
     return links;
@@ -216,7 +236,7 @@ export class BracketWheel {
       const p = polar(R_SF, (j + 0.5) * (360 / 4));
       return {
         team: null, x: p.x, y: p.y, r: NODE_R, matchId: null, altId: null,
-        decided: false, next: false, advancing: false,
+        decided: false, next: false, live: false, advancing: false,
         tip: 'Semifinal — to be decided',
       };
     });
@@ -232,7 +252,7 @@ export class BracketWheel {
       const rSf = R_SF + NODE_R + 4;
       links.push({
         d: curve(rQf, aQf, (rQf + rSf) / 2, (aQf + aSf) / 2, rSf, aSf),
-        matchId: null, altId: null, decided: false, next: false,
+        matchId: null, altId: null, decided: false, next: false, live: false,
       });
     }
     return links;
@@ -244,7 +264,7 @@ export class BracketWheel {
       const p = polar(R_F, (j + 0.5) * (360 / 2));
       return {
         team: null, x: p.x, y: p.y, r: NODE_R, matchId: null, altId: null,
-        decided: false, next: false, advancing: false,
+        decided: false, next: false, live: false, advancing: false,
         tip: 'Final — to be decided',
       };
     });
@@ -260,7 +280,7 @@ export class BracketWheel {
       const rF = R_F + NODE_R + 4;
       links.push({
         d: curve(rSf, aSf, (rSf + rF) / 2, (aSf + aF) / 2, rF, aF),
-        matchId: null, altId: null, decided: false, next: false,
+        matchId: null, altId: null, decided: false, next: false, live: false,
       });
     }
     return links;

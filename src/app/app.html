@@ -95,6 +95,7 @@
       [matches]="matches()"
       [hovered]="highlighted()"
       [nextId]="nextMatch()?.id ?? null"
+      [liveIds]="liveIds()"
       (hoverChange)="setHover($event)"
     />
     <p class="source">Live scores via ESPN — refreshes every minute</p>

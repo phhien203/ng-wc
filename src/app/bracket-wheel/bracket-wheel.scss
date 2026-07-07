@@ -68,13 +68,19 @@ svg {
   }
 }
 
-/* next match to kick off — soft golden pulse */
+/* next match to kick off — static golden ring */
 .node.next .stroke {
   stroke: var(--gold);
-  animation: next-pulse 1.8s ease-in-out infinite;
+  stroke-width: 3.5;
 }
 
-@keyframes next-pulse {
+/* match in progress — pulsing ring in the live color */
+.node.live .stroke {
+  stroke: var(--lose);
+  animation: live-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
   0%,
   100% {
     stroke-width: 2.5;
@@ -87,7 +93,7 @@ svg {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .node.next .stroke {
+  .node.live .stroke {
     animation: none;
     stroke-opacity: 1;
     stroke-width: 3.5;
@@ -137,6 +143,10 @@ svg {
 
   &.next {
     stroke: var(--gold);
+  }
+
+  &.live {
+    stroke: var(--lose);
   }
 
   &.active {

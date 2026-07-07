@@ -48,7 +48,7 @@
     <!-- match links between the two opponents (R16 ring) -->
     <g class="links">
       @for (l of r16MatchLinks(); track l.matchId) {
-        <path [attr.d]="l.d" class="match-link" [class.next]="l.next"
+        <path [attr.d]="l.d" class="match-link" [class.next]="l.next" [class.live]="l.live"
               [class.active]="hovered() === l.matchId" [class.dim]="isDimmed(l.matchId, l.altId)" />
       }
     </g>
@@ -56,7 +56,7 @@
     <!-- match links between the two opponents (outer ring) -->
     <g class="links">
       @for (l of matchLinks(); track l.matchId) {
-        <path [attr.d]="l.d" class="match-link" [class.next]="l.next"
+        <path [attr.d]="l.d" class="match-link" [class.next]="l.next" [class.live]="l.live"
               [class.active]="hovered() === l.matchId" [class.dim]="isDimmed(l.matchId, l.altId)" />
       }
     </g>
@@ -87,6 +87,7 @@
     <g class="ring qf">
       @for (n of qfNodes(); track n.matchId) {
         <g class="node" [class.tbd]="!n.team" [class.dim]="isDimmed(n.matchId, n.altId)"
+           [class.next]="n.next" [class.live]="n.live"
            (mouseenter)="onEnter(n.matchId)" (mouseleave)="onLeave()"
            [attr.transform]="'translate(' + n.x + ',' + n.y + ')'">
           <title>{{ n.tip }}</title>
@@ -107,7 +108,7 @@
     <!-- Middle ring: 16 teams (Round of 16 matches) -->
     <g class="ring r16">
       @for (n of r16Nodes(); track n.matchId + '-' + n.team!.code) {
-        <g class="node" [class.dim]="isDimmed(n.matchId, n.altId)" [class.next]="n.next"
+        <g class="node" [class.dim]="isDimmed(n.matchId, n.altId)" [class.next]="n.next" [class.live]="n.live"
            (mouseenter)="onEnter(n.matchId)" (mouseleave)="onLeave()"
            [attr.transform]="'translate(' + n.x + ',' + n.y + ')'">
           <title>{{ n.tip }}</title>
@@ -123,7 +124,7 @@
     <!-- Outer ring: 32 teams (Round of 32) — flags only, names via tooltip -->
     <g class="ring outer">
       @for (n of outerNodes(); track n.matchId + '-' + n.team!.code) {
-        <g class="node" [class.dim]="isDimmed(n.matchId, n.altId)" [class.next]="n.next"
+        <g class="node" [class.dim]="isDimmed(n.matchId, n.altId)" [class.next]="n.next" [class.live]="n.live"
            (mouseenter)="onEnter(n.matchId)" (mouseleave)="onLeave()"
            [attr.transform]="'translate(' + n.x + ',' + n.y + ')'">
           <title>{{ n.tip }}</title>
