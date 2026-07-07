@@ -3,15 +3,15 @@
 ## ADDED Requirements
 
 ### Requirement: Nx runs workspace tasks
-The workspace SHALL provide Nx as the task runner so that `nx build wc2026`, `nx test wc2026`, and `nx serve wc2026` execute the same underlying Angular builders as the existing `ng` commands.
+The workspace SHALL provide Nx as the task runner so that `nx build wc2026`, `nx test wc2026`, and `nx serve wc2026` execute the same underlying Angular builders as the pre-Nx `ng` commands.
 
 #### Scenario: Build through Nx
 - **WHEN** a developer runs `nx build wc2026`
-- **THEN** the application builds with the same configuration and output as `ng build`, producing the bundle under `dist/`
+- **THEN** the application builds with the same configuration and output as the pre-Nx `ng build`, producing the bundle under `dist/`
 
 #### Scenario: Test through Nx
 - **WHEN** a developer runs `nx test wc2026`
-- **THEN** the Vitest suite runs with the same results as `ng test`
+- **THEN** the Vitest suite runs with the same results as the pre-Nx `ng test`
 
 ### Requirement: Cacheable build and test targets
 Nx SHALL cache the `build` and `test` targets, keyed on their input files, so repeated runs with unchanged inputs are served from the cache instead of re-executing.

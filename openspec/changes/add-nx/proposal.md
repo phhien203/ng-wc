@@ -6,7 +6,7 @@ The project is a single Angular CLI workspace where every `ng build` / `ng test`
 
 ## What Changes
 
-- Add Nx to the existing repo using the incremental adoption path (`nx init`), keeping the current single-app layout and `angular.json` intact.
+- Add Nx to the existing repo using the incremental adoption path (`nx init`), keeping the current single-app layout. *(Amended during implementation: `nx init` converts the workspace to Nx standalone format — `angular.json` is replaced by an equivalent root `project.json`; accepted, see design.)*
 - Add `nx.json` configuring cacheable targets (`build`, `test`) and their inputs/outputs so repeated runs with unchanged sources hit the cache.
 - Route existing npm scripts (`start`, `build`, `watch`, `test`) through Nx so caching applies without changing developer muscle memory.
 - Add the `nx` devDependency (and `@nx/angular` plugin) pinned to a version compatible with Angular 22.
@@ -26,7 +26,7 @@ The project is a single Angular CLI workspace where every `ng build` / `ng test`
 ## Impact
 
 - **Dependencies**: adds `nx` and `@nx/angular` to `devDependencies`; no runtime dependencies change.
-- **Config files**: new `nx.json`; possible minimal edits to `package.json` scripts and `.gitignore`; `angular.json` and `tsconfig*.json` remain the source of truth for the app.
+- **Config files**: new `nx.json` and root `project.json` (replacing `angular.json`); minimal edits to `package.json` scripts and `.gitignore`; `tsconfig*.json` untouched.
 - **Developer workflow**: `npm start`, `npm run build`, `npm test` keep working; `nx build wc2026` / `nx test wc2026` become available with caching.
 - **CI**: unaffected initially; cache benefits apply locally, and remote caching (Nx Cloud) is explicitly out of scope for this change.
 - **Application behavior**: none — build output and test results must be identical before and after.

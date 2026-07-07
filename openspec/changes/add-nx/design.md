@@ -25,9 +25,11 @@ Run `npx nx@latest init` in the repo. This adds the `nx` package, generates `nx.
 
 *Alternative considered*: full migration with `@nx/angular:ng-add` / regenerating as an Nx workspace with `apps/` + `project.json`. Rejected for now — it churns every path in the repo for no immediate benefit on a single app, and can be done later if the workspace grows.
 
-### 2. Keep `angular.json` as the source of truth
+*Resolved during implementation (2026-07-08)*: current `nx init` unconditionally converts single-app Angular CLI workspaces to the Nx standalone format — it translated `angular.json` 1:1 into a root `project.json` and deleted `angular.json`. Decision (user-confirmed): keep the `project.json` conversion. The repo layout is otherwise untouched (no `apps/`/`libs/` churn).
 
-No `project.json` files. Nx infers the `wc2026` project and its targets (`build`, `serve`, `test`) from `angular.json`. This keeps the Angular CLI fully usable (`ng serve` etc. still work) and minimizes diff surface.
+### 2. ~~Keep `angular.json` as the source of truth~~ `project.json` is the source of truth
+
+Superseded by the resolution in Decision 1: the root `project.json` now defines the `wc2026` project and its targets (`build`, `serve`, `test`), using the same `@angular/build` executors as before. The plain Angular CLI (`ng serve`, `ng generate`) no longer works without `angular.json`; the equivalents are `nx serve` and `nx g @schematics/angular:<schematic>`. The `ng` npm script is removed accordingly.
 
 ### 3. Cacheable targets and inputs in `nx.json`
 
@@ -35,13 +37,15 @@ Mark `build` and `test` as cacheable in `nx.json` (`targetDefaults` with `cache:
 
 ### 4. Route npm scripts through Nx
 
-Rewrite `package.json` scripts to delegate to Nx (e.g., `"build": "nx build"`, `"test": "nx test"`, `"start": "nx serve"`), so cache benefits apply to the commands developers already type. The `ng` script stays for direct CLI access.
+Rewrite `package.json` scripts to delegate to Nx (e.g., `"build": "nx build"`, `"test": "nx test"`, `"start": "nx serve"`), so cache benefits apply to the commands developers already type. ~~The `ng` script stays for direct CLI access.~~ *Amended*: the `ng` script is removed — the Angular CLI cannot run without `angular.json` (see Decision 2).
 
 *Alternative considered*: leave scripts calling `ng` and rely on Nx's script wrapping. Delegating explicitly is clearer and guarantees cache participation.
 
 ### 5. Version selection
 
 Install the latest Nx major that officially supports Angular 22 (verify with the Nx↔Angular compatibility matrix during implementation). Pin `nx` and `@nx/angular` to the same exact version — mixed Nx package versions are a common failure mode.
+
+*Resolved during implementation (2026-07-08)*: no stable Nx release supports Angular 22 — `@nx/angular@23.0.1` caps peers at `< 22.0.0`. Angular 22 support ships in the 23.1 line, currently prerelease. Decision (user-confirmed): pin `nx` and `@nx/angular` to exactly `23.1.0-beta.7`; upgrade to 23.1 stable when released.
 
 ## Risks / Trade-offs
 
@@ -57,7 +61,7 @@ Install the latest Nx major that officially supports Angular 22 (verify with the
 2. Configure cacheable targets, update npm scripts, extend `.gitignore` with `.nx/`.
 3. Verify: `nx build wc2026` twice (second run cached), touch a source file and confirm re-execution, run `npm test` and `npm run build` to confirm parity.
 
-**Rollback**: revert the commit — removes `nx.json`, script changes, and devDependencies; `angular.json` was never modified, so the Angular CLI workflow is untouched.
+**Rollback**: revert the commit — restores `angular.json`, removes `project.json`, `nx.json`, `.npmrc`, script changes, and devDependencies, returning the workspace to the pre-Nx Angular CLI setup.
 
 ## Open Questions
 
