@@ -114,6 +114,7 @@ export class BracketWheel {
   private readonly r16 = computed(() => this.matches().filter((m) => m.round === 'R16'));
   private readonly qf = computed(() => this.matches().filter((m) => m.round === 'QF'));
   private readonly sf = computed(() => this.matches().filter((m) => m.round === 'SF'));
+  private readonly f = computed(() => this.matches().filter((m) => m.round === 'F'));
 
   /** Outer ring: 32 teams (Round of 32) */
   protected readonly outerNodes = computed<RNode[]>(() => {
@@ -297,29 +298,38 @@ export class BracketWheel {
     return links;
   });
 
-  /** Center ring: the 2 Final slots (TBD), flanking the trophy */
+  /** Center ring: the 2 Final slots — Semifinal winners once decided */
   protected readonly finalNodes = computed<RNode[]>(() => {
-    return Array.from({ length: 2 }, (_, j) => {
+    const nextId = this.nextId();
+    const liveIds = this.liveIds();
+    const f = this.f();
+    return this.sf().map((m, j) => {
       const p = polar(R_F, (j + 0.5) * (360 / 2));
+      const w = winnerOf(m);
+      const fMatch = f[0] ?? null;
       return {
-        team: null, x: p.x, y: p.y, r: NODE_R, matchId: null, altId: null,
-        decided: false, next: false, live: false, advancing: false,
-        tip: 'Final — to be decided',
+        team: w, x: p.x, y: p.y, r: NODE_R, matchId: m.id, altId: null,
+        decided: !!w, next: fMatch?.id === nextId, live: fMatch !== null && liveIds.has(fMatch.id),
+        advancing: !!w,
+        tip: w ? `${w.name} → Final` : 'Final — to be decided',
       };
     });
   });
 
-  /** Semifinal → Final links — converging curve (always dashed, not played yet) */
+  /** Semifinal → Final links — converging curve, one per Semifinal winner */
   protected readonly finalLinks = computed<Link[]>(() => {
+    const sf = this.sf();
     const links: Link[] = [];
     for (let k = 0; k < 4; k++) {
+      const sfDataIdx = Math.floor(k / 2);
+      const m = sf[sfDataIdx];
       const aSf = (k + 0.5) * (360 / 4);
-      const aF = (Math.floor(k / 2) + 0.5) * (360 / 2);
+      const aF = (sfDataIdx + 0.5) * (360 / 2);
       const rSf = R_SF - NODE_R - 4;
       const rF = R_F + NODE_R + 4;
       links.push({
         d: curve(rSf, aSf, (rSf + rF) / 2, (aSf + aF) / 2, rF, aF),
-        matchId: null, altId: null, decided: false, next: false, live: false,
+        matchId: m?.id ?? null, altId: null, decided: !!m?.winner, next: false, live: false,
       });
     }
     return links;

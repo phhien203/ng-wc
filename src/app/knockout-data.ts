@@ -25,7 +25,7 @@ export interface Team {
 
 export type Side = 'home' | 'away';
 
-export type Round = 'R32' | 'R16' | 'QF' | 'SF';
+export type Round = 'R32' | 'R16' | 'QF' | 'SF' | 'F';
 
 export interface Match {
   id: number;
@@ -157,13 +157,23 @@ const SF_SEED: Omit<MatchSeed, 'home' | 'away'>[] = [
   { id: 30, koDate: 'Wed Jul 15', koTime: '22:00', koISO: '2026-07-15T22:00' },
 ];
 
+/**
+ * The Final (Jul 19, Finland time). Only the schedule lives here — teams
+ * are filled in by `withFTeams`.
+ */
+// prettier-ignore
+const F_SEED: Omit<MatchSeed, 'home' | 'away'>[] = [
+  { id: 31, koDate: 'Sun Jul 19', koTime: '22:00', koISO: '2026-07-19T22:00' },
+];
+
 export const ROUND_OF_32: Match[] = R32_SEED.map((m) => ({ ...m, round: 'R32' }));
 export const ROUND_OF_16: Match[] = R16_SEED.map((m) => ({ ...m, round: 'R16' }));
 export const QUARTERFINALS: Match[] = QF_SEED.map((m) => ({ ...m, round: 'QF', home: TBD, away: TBD }));
 export const SEMIFINALS: Match[] = SF_SEED.map((m) => ({ ...m, round: 'SF', home: TBD, away: TBD }));
+export const FINALS: Match[] = F_SEED.map((m) => ({ ...m, round: 'F', home: TBD, away: TBD }));
 
 /** All knockout matches known so far, bracket-ordered within each round. */
-export const KNOCKOUT_MATCHES: Match[] = [...ROUND_OF_32, ...ROUND_OF_16, ...QUARTERFINALS, ...SEMIFINALS];
+export const KNOCKOUT_MATCHES: Match[] = [...ROUND_OF_32, ...ROUND_OF_16, ...QUARTERFINALS, ...SEMIFINALS, ...FINALS];
 
 /** Looks up the winning team of a feeder match by id, or `TBD` if undecided. */
 function winnerLookup(matches: Match[]): (id: number) => Team {
@@ -200,6 +210,22 @@ export function withSfTeams(matches: Match[]): Match[] {
   return matches.map((m) => {
     if (m.round !== 'SF') return m;
     const [homeId, awayId] = SF_FEEDERS[m.id];
+    return { ...m, home: feederWinner(homeId), away: feederWinner(awayId) };
+  });
+}
+
+/** SF ids feeding the Final. */
+const F_FEEDERS: Record<number, [number, number]> = { 31: [29, 30] };
+
+/**
+ * Fill the Final's `home`/`away` from its two Semifinal feeders' winners,
+ * leaving `TBD` while a feeder is undecided. Pure, like `withSfTeams`.
+ */
+export function withFTeams(matches: Match[]): Match[] {
+  const feederWinner = winnerLookup(matches);
+  return matches.map((m) => {
+    if (m.round !== 'F') return m;
+    const [homeId, awayId] = F_FEEDERS[m.id];
     return { ...m, home: feederWinner(homeId), away: feederWinner(awayId) };
   });
 }

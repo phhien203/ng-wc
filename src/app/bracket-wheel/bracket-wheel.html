@@ -20,7 +20,7 @@
     <!-- Semifinal → Final links -->
     <g class="links">
       @for (l of finalLinks(); track $index) {
-        <path [attr.d]="l.d" class="link future" />
+        <path [attr.d]="l.d" class="link future" [class.dim]="isDimmed(l.matchId, l.altId)" />
       }
     </g>
 
@@ -61,13 +61,24 @@
       }
     </g>
 
-    <!-- Center ring: 2 Final slots (TBD) -->
+    <!-- Center ring: 2 Final slots (Semifinal winners once decided) -->
     <g class="ring final">
-      @for (n of finalNodes(); track $index) {
-        <g class="node tbd" [attr.transform]="'translate(' + n.x + ',' + n.y + ')'">
+      @for (n of finalNodes(); track n.matchId) {
+        <g class="node" [class.tbd]="!n.team" [class.dim]="isDimmed(n.matchId, n.altId)"
+           [class.next]="n.next" [class.live]="n.live"
+           (mouseenter)="onEnter(n.matchId)" (mouseleave)="onLeave()"
+           [attr.transform]="'translate(' + n.x + ',' + n.y + ')'">
           <title>{{ n.tip }}</title>
-          <circle [attr.r]="nodeR" class="bg" />
-          <text class="qmark" y="1" text-anchor="middle">?</text>
+          @if (n.team; as team) {
+            <circle [attr.r]="nodeR" class="bg" [class.advancing]="n.advancing" />
+            <image [attr.href]="flagUrl(team)" x="-36" y="-27" width="72" height="54"
+                   preserveAspectRatio="xMidYMid meet" clip-path="url(#clipNode)" />
+            <circle [attr.r]="nodeR" class="stroke" [class.advancing]="n.advancing" />
+            <text class="code" [attr.y]="nodeR + 13" text-anchor="middle">{{ team.code }}</text>
+          } @else {
+            <circle [attr.r]="nodeR" class="bg" />
+            <text class="qmark" y="1" text-anchor="middle">?</text>
+          }
         </g>
       }
     </g>
