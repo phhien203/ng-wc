@@ -22,7 +22,11 @@
       >
         <span class="time">{{ row.time }}</span>
         <span class="teams">
-          <span class="team" [class.win]="row.match.winner === 'home'">
+          <span
+            class="team"
+            [class.win]="row.match.winner === 'home'"
+            [class.loss]="row.match.winner === 'away'"
+          >
             <img
               class="flag"
               [ngSrc]="flagUrl(row.match.home)"
@@ -33,7 +37,11 @@
             {{ row.match.home.code }}
           </span>
           <span class="vs">vs</span>
-          <span class="team" [class.win]="row.match.winner === 'away'">
+          <span
+            class="team"
+            [class.win]="row.match.winner === 'away'"
+            [class.loss]="row.match.winner === 'home'"
+          >
             <img
               class="flag"
               [ngSrc]="flagUrl(row.match.away)"

@@ -124,6 +124,11 @@ details[open] > summary .chevron {
       color: var(--win);
       font-weight: 700;
     }
+
+    &.loss {
+      color: #5d6b85;
+      opacity: 0.6;
+    }
   }
 
   .flag {

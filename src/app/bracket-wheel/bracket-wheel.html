@@ -123,9 +123,11 @@
            (mouseenter)="onEnter(n.matchId)" (mouseleave)="onLeave()"
            [attr.transform]="'translate(' + n.x + ',' + n.y + ')'">
           <title>{{ n.tip }}</title>
-          <circle [attr.r]="nodeR" class="bg" [class.advancing]="n.advancing" />
+          <circle [attr.r]="nodeR" class="bg" [class.advancing]="n.advancing"
+                  [class.eliminated]="n.decided && !n.advancing" />
           <image [attr.href]="flagUrl(n.team!)" x="-36" y="-27" width="72" height="54"
-                 preserveAspectRatio="xMidYMid meet" clip-path="url(#clipNode)" />
+                 preserveAspectRatio="xMidYMid meet" clip-path="url(#clipNode)"
+                 [class.eliminated]="n.decided && !n.advancing" />
           <circle [attr.r]="nodeR" class="stroke" [class.advancing]="n.advancing"
                   [class.eliminated]="n.decided && !n.advancing" />
         </g>
@@ -139,9 +141,11 @@
            (mouseenter)="onEnter(n.matchId)" (mouseleave)="onLeave()"
            [attr.transform]="'translate(' + n.x + ',' + n.y + ')'">
           <title>{{ n.tip }}</title>
-          <circle [attr.r]="nodeR" class="bg" [class.advancing]="n.advancing" />
+          <circle [attr.r]="nodeR" class="bg" [class.advancing]="n.advancing"
+                  [class.eliminated]="n.decided && !n.advancing" />
           <image [attr.href]="flagUrl(n.team!)" x="-36" y="-27" width="72" height="54"
-                 preserveAspectRatio="xMidYMid meet" clip-path="url(#clipNode)" />
+                 preserveAspectRatio="xMidYMid meet" clip-path="url(#clipNode)"
+                 [class.eliminated]="n.decided && !n.advancing" />
           <circle [attr.r]="nodeR" class="stroke" [class.advancing]="n.advancing"
                   [class.eliminated]="n.decided && !n.advancing" />
         </g>

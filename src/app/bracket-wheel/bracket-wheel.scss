@@ -31,6 +31,10 @@ svg {
     fill: #11342b;
   }
 
+  .bg.eliminated {
+    fill: #12141c;
+  }
+
   /* stroke drawn on top of the flag */
   .stroke {
     fill: none;
@@ -45,8 +49,12 @@ svg {
   }
 
   .stroke.eliminated {
-    stroke: #5a3a48;
+    stroke: #4a2e3a;
     stroke-width: 2;
+  }
+
+  image.eliminated {
+    opacity: 0.45;
   }
 
   .code {
