@@ -1,15 +1,17 @@
 /**
  * REAL World Cup 2026 knockout data (Canada/Mexico/USA).
- * Source: Yahoo Sports & CBS Sports — updated Jul 7, 2026:
- * Round of 32 is complete; the Round of 16 (Jul 4–7) and the
- * Quarterfinals (Jul 9–13 Finland time) are scheduled.
+ * Source: ESPN — updated Jul 12, 2026: Round of 32, Round of 16, and the
+ * Quarterfinals (Jul 9–12 Finland time) are complete — France, England,
+ * Spain, and Argentina through; Semifinals (Jul 14–15) are scheduled.
  *
  * Matches are ordered to follow the actual bracket, so:
  *   - R32 pairs (M1,M2),(M3,M4)... meet in the Round of 16
  *   - consecutive R16 pairs meet in the Quarterfinals
- * To update a result: just set `winner` on the match. Quarterfinal
- * teams are not stored here — `withQfTeams` derives them from the
- * R16 winners (TBD until the feeder match is decided).
+ * The Semifinal pairing follows the bracket halves rather than adjacent
+ * QF ids — see `SF_FEEDERS`.
+ * To update a result: just set `winner` on the match. Quarterfinal and
+ * Semifinal teams are not stored here — `withQfTeams`/`withSfTeams`
+ * derive them from the previous round's winners (TBD until decided).
  */
 
 export interface Team {
@@ -23,7 +25,7 @@ export interface Team {
 
 export type Side = 'home' | 'away';
 
-export type Round = 'R32' | 'R16' | 'QF';
+export type Round = 'R32' | 'R16' | 'QF' | 'SF';
 
 export interface Match {
   id: number;
@@ -116,14 +118,14 @@ const R32_SEED: MatchSeed[] = [
  */
 // prettier-ignore
 const R16_SEED: MatchSeed[] = [
-  { id: 17, home: T.PAR, away: T.FRA, koDate: 'Sun Jul 5', koTime: '00:00', koISO: '2026-07-05T00:00' },
-  { id: 18, home: T.CAN, away: T.MAR, koDate: 'Sat Jul 4', koTime: '20:00', koISO: '2026-07-04T20:00' },
-  { id: 19, home: T.BRA, away: T.NOR, koDate: 'Sun Jul 5', koTime: '23:00', koISO: '2026-07-05T23:00' },
-  { id: 20, home: T.MEX, away: T.ENG, koDate: 'Mon Jul 6', koTime: '03:00', koISO: '2026-07-06T03:00' },
-  { id: 21, home: T.ESP, away: T.POR, koDate: 'Mon Jul 6', koTime: '22:00', koISO: '2026-07-06T22:00' },
-  { id: 22, home: T.BEL, away: T.USA, koDate: 'Tue Jul 7', koTime: '03:00', koISO: '2026-07-07T03:00' },
-  { id: 23, home: T.EGY, away: T.ARG, koDate: 'Tue Jul 7', koTime: '19:00', koISO: '2026-07-07T19:00' },
-  { id: 24, home: T.SUI, away: T.COL, koDate: 'Tue Jul 7', koTime: '23:00', koISO: '2026-07-07T23:00' },
+  { id: 17, home: T.PAR, away: T.FRA, winner: 'away', note: '0-1',           koDate: 'Sun Jul 5', koTime: '00:00', koISO: '2026-07-05T00:00' },
+  { id: 18, home: T.CAN, away: T.MAR, winner: 'away', note: '0-3',           koDate: 'Sat Jul 4', koTime: '20:00', koISO: '2026-07-04T20:00' },
+  { id: 19, home: T.BRA, away: T.NOR, winner: 'away', note: '1-2',           koDate: 'Sun Jul 5', koTime: '23:00', koISO: '2026-07-05T23:00' },
+  { id: 20, home: T.MEX, away: T.ENG, winner: 'away', note: '2-3',           koDate: 'Mon Jul 6', koTime: '03:00', koISO: '2026-07-06T03:00' },
+  { id: 21, home: T.ESP, away: T.POR, winner: 'home', note: '1-0',           koDate: 'Mon Jul 6', koTime: '22:00', koISO: '2026-07-06T22:00' },
+  { id: 22, home: T.BEL, away: T.USA, winner: 'home', note: '4-1',           koDate: 'Tue Jul 7', koTime: '03:00', koISO: '2026-07-07T03:00' },
+  { id: 23, home: T.EGY, away: T.ARG, winner: 'away', note: '2-3',           koDate: 'Tue Jul 7', koTime: '19:00', koISO: '2026-07-07T19:00' },
+  { id: 24, home: T.SUI, away: T.COL, winner: 'home', note: '0-0 (pen 4-3)', koDate: 'Tue Jul 7', koTime: '23:00', koISO: '2026-07-07T23:00' },
 ];
 
 /** Placeholder team for a Quarterfinal slot whose feeder match is undecided. */
@@ -132,23 +134,45 @@ export const TBD: Team = { code: 'TBD', name: 'To be decided', flag: 'tbd' };
 /**
  * The 4 Quarterfinals (Jul 9–13 Finland time), in true bracket order:
  * match j pairs the winners of R16 matches (2j+17, 2j+18); `home` is the
- * winner of the first feeder. Only the schedule lives here — teams are
- * filled in by `withQfTeams`.
+ * winner of the first feeder. Only the schedule (plus `winner`/`note` once
+ * played) lives here — teams are filled in by `withQfTeams`.
  */
 // prettier-ignore
 const QF_SEED: Omit<MatchSeed, 'home' | 'away'>[] = [
-  { id: 25, koDate: 'Thu Jul 9',  koTime: '23:00', koISO: '2026-07-09T23:00' },
-  { id: 26, koDate: 'Sun Jul 12', koTime: '00:00', koISO: '2026-07-12T00:00' },
-  { id: 27, koDate: 'Fri Jul 10', koTime: '22:00', koISO: '2026-07-10T22:00' },
-  { id: 28, koDate: 'Mon Jul 13', koTime: '04:00', koISO: '2026-07-13T04:00' },
+  { id: 25, winner: 'home', note: '2-0', koDate: 'Thu Jul 9',  koTime: '23:00', koISO: '2026-07-09T23:00' },
+  { id: 26, winner: 'away', note: '1-2 (aet)', koDate: 'Sun Jul 12', koTime: '00:00', koISO: '2026-07-12T00:00' },
+  { id: 27, winner: 'home', note: '2-1', koDate: 'Fri Jul 10', koTime: '22:00', koISO: '2026-07-10T22:00' },
+  { id: 28, winner: 'home', note: '3-1 (aet)', koDate: 'Sun Jul 12', koTime: '04:00', koISO: '2026-07-12T04:00' },
+];
+
+/**
+ * The 2 Semifinals (Jul 14–15 Finland time). Pairing follows the bracket
+ * halves rather than adjacent QF ids: SF1 = winners of QF25 & QF27,
+ * SF2 = winners of QF26 & QF28 — see `SF_FEEDERS`. Only the schedule lives
+ * here — teams are filled in by `withSfTeams`.
+ */
+// prettier-ignore
+const SF_SEED: Omit<MatchSeed, 'home' | 'away'>[] = [
+  { id: 29, koDate: 'Tue Jul 14', koTime: '22:00', koISO: '2026-07-14T22:00' },
+  { id: 30, koDate: 'Wed Jul 15', koTime: '22:00', koISO: '2026-07-15T22:00' },
 ];
 
 export const ROUND_OF_32: Match[] = R32_SEED.map((m) => ({ ...m, round: 'R32' }));
 export const ROUND_OF_16: Match[] = R16_SEED.map((m) => ({ ...m, round: 'R16' }));
 export const QUARTERFINALS: Match[] = QF_SEED.map((m) => ({ ...m, round: 'QF', home: TBD, away: TBD }));
+export const SEMIFINALS: Match[] = SF_SEED.map((m) => ({ ...m, round: 'SF', home: TBD, away: TBD }));
 
 /** All knockout matches known so far, bracket-ordered within each round. */
-export const KNOCKOUT_MATCHES: Match[] = [...ROUND_OF_32, ...ROUND_OF_16, ...QUARTERFINALS];
+export const KNOCKOUT_MATCHES: Match[] = [...ROUND_OF_32, ...ROUND_OF_16, ...QUARTERFINALS, ...SEMIFINALS];
+
+/** Looks up the winning team of a feeder match by id, or `TBD` if undecided. */
+function winnerLookup(matches: Match[]): (id: number) => Team {
+  const byId = new Map(matches.map((m) => [m.id, m]));
+  return (id) => {
+    const feeder = byId.get(id);
+    return (feeder && winnerOf(feeder)) || TBD;
+  };
+}
 
 /**
  * Fill each Quarterfinal's `home`/`away` from the winners of its two R16
@@ -156,15 +180,27 @@ export const KNOCKOUT_MATCHES: Match[] = [...ROUND_OF_32, ...ROUND_OF_16, ...QUA
  * Pure: reads winners from `matches` itself, so live R16 results flow through.
  */
 export function withQfTeams(matches: Match[]): Match[] {
-  const byId = new Map(matches.map((m) => [m.id, m]));
-  const feederWinner = (id: number): Team => {
-    const feeder = byId.get(id);
-    return (feeder && winnerOf(feeder)) || TBD;
-  };
+  const feederWinner = winnerLookup(matches);
   return matches.map((m) => {
     if (m.round !== 'QF') return m;
     const j = m.id - 25;
     return { ...m, home: feederWinner(2 * j + 17), away: feederWinner(2 * j + 18) };
+  });
+}
+
+/** QF ids feeding each Semifinal — the bracket halves, not adjacent pairs. */
+const SF_FEEDERS: Record<number, [number, number]> = { 29: [25, 27], 30: [26, 28] };
+
+/**
+ * Fill each Semifinal's `home`/`away` from its two QF feeders' winners,
+ * leaving `TBD` while a feeder is undecided. Pure, like `withQfTeams`.
+ */
+export function withSfTeams(matches: Match[]): Match[] {
+  const feederWinner = winnerLookup(matches);
+  return matches.map((m) => {
+    if (m.round !== 'SF') return m;
+    const [homeId, awayId] = SF_FEEDERS[m.id];
+    return { ...m, home: feederWinner(homeId), away: feederWinner(awayId) };
   });
 }
 

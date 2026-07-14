@@ -4,7 +4,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs/operators';
 
 import { EspnScoreboard, SCOREBOARD_URL, mergeScoreboard } from './espn-scoreboard';
-import { KNOCKOUT_MATCHES, Match, withQfTeams } from './knockout-data';
+import { KNOCKOUT_MATCHES, Match, withQfTeams, withSfTeams } from './knockout-data';
 import { poll } from './poll.operator';
 
 /**
@@ -21,11 +21,13 @@ export class KnockoutFeed {
 
   private readonly fetch$ = this.http.get<EspnScoreboard>(SCOREBOARD_URL).pipe(
     map((scoreboard) => {
-      // First merge brings in the R16 winners that decide the Quarterfinal
-      // pairings; the second lets the now-resolved QF matches pick up their
-      // own live scores (the merge keys on team codes, so TBD never matches).
+      // Each merge brings in the previous round's winners that decide the
+      // next round's pairings, then lets the now-resolved matches pick up
+      // their own live scores (the merge keys on team codes, so TBD never
+      // matches): R16 → QF teams → QF scores → SF teams → SF scores.
       const merged = mergeScoreboard(KNOCKOUT_MATCHES, scoreboard);
-      return mergeScoreboard(withQfTeams(merged), scoreboard);
+      const withQf = mergeScoreboard(withQfTeams(merged), scoreboard);
+      return mergeScoreboard(withSfTeams(withQf), scoreboard);
     }),
   );
 
@@ -36,7 +38,7 @@ export class KnockoutFeed {
   readonly matches: Signal<Match[]> = toSignal(
     this.fetch$.pipe(poll<Match[]>({ period: 60_000 })),
     {
-      initialValue: withQfTeams(KNOCKOUT_MATCHES),
+      initialValue: withSfTeams(withQfTeams(KNOCKOUT_MATCHES)),
     },
   );
 }

@@ -63,6 +63,14 @@
     <div class="fixtures">
       <p class="hint">All times EEST (Helsinki)</p>
       <app-fixture-list
+        title="Semifinals"
+        [matches]="sfMatches()"
+        [liveIds]="liveIds()"
+        [nextId]="nextMatch()?.id ?? null"
+        [highlighted]="highlighted()"
+        (hoverChange)="setHover($event)"
+      />
+      <app-fixture-list
         title="Quarterfinals"
         [matches]="qfMatches()"
         [liveIds]="liveIds()"

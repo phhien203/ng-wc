@@ -1,5 +1,5 @@
 import { EspnEvent, EspnScoreboard, mergeScoreboard } from './espn-scoreboard';
-import { KNOCKOUT_MATCHES, TBD } from './knockout-data';
+import { Match, TBD, Team } from './knockout-data';
 
 interface Comp {
   code: string;
@@ -24,6 +24,18 @@ function event(state: 'pre' | 'in' | 'post', shortDetail: string, comps: [Comp, 
   };
 }
 
+const team = (code: string): Team => ({ code, name: code, flag: code.toLowerCase() });
+
+/** A minimal synthetic bracket, decoupled from the real bundled results. */
+const bracket: Match[] = [
+  { id: 1, round: 'R32', home: team('PAR'), away: team('GER'), koDate: 'x', koTime: '00:00', koISO: '2026-06-29T00:00' },
+  { id: 18, round: 'R16', home: team('CAN'), away: team('MAR'), koDate: 'x', koTime: '00:00', koISO: '2026-07-04T00:00' },
+  { id: 19, round: 'R16', home: team('BRA'), away: team('NOR'), koDate: 'x', koTime: '00:00', koISO: '2026-07-05T00:00' },
+  { id: 20, round: 'R16', home: team('MEX'), away: team('ENG'), koDate: 'x', koTime: '00:00', koISO: '2026-07-06T00:00' },
+  { id: 24, round: 'R16', home: team('SUI'), away: team('COL'), koDate: 'x', koTime: '00:00', koISO: '2026-07-07T00:00' },
+  { id: 25, round: 'QF', home: TBD, away: TBD, koDate: 'x', koTime: '00:00', koISO: '2026-07-09T00:00' },
+];
+
 describe('mergeScoreboard', () => {
   const scoreboard: EspnScoreboard = {
     events: [
@@ -45,7 +57,7 @@ describe('mergeScoreboard', () => {
     ],
   };
 
-  const merged = mergeScoreboard(KNOCKOUT_MATCHES, scoreboard);
+  const merged = mergeScoreboard(bracket, scoreboard);
 
   it('re-orients results to the bracket home/away and formats penalties', () => {
     const m1 = merged.find((m) => m.id === 1)!;
@@ -67,7 +79,7 @@ describe('mergeScoreboard', () => {
     expect(m24.winner).toBeUndefined();
   });
 
-  it('does not corrupt known matches with unknown pairs (BRA vs ENG is a Quarterfinal)', () => {
+  it('does not corrupt known matches with unknown pairs (BRA vs ENG is not a bracket match)', () => {
     const braMatch = merged.find((m) => m.id === 19)!; // BRA vs NOR in the bracket
     expect(braMatch.winner).toBeUndefined();
     const engMatch = merged.find((m) => m.id === 20)!; // MEX vs ENG in the bracket
