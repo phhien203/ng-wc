@@ -44,6 +44,25 @@ const NODE_R = 26;
 const PAIR_HOME = 0.57;
 const PAIR_AWAY = 1.43;
 
+/**
+ * Physical quarter for each data-order quarter (self-inverse: swaps quarters
+ * 1 and 2). The bracket's real Semifinal pairing crosses the two "natural"
+ * bracket halves — QF25 & QF27 meet, QF26 & QF28 meet — so laying every ring
+ * out in raw bracket order seats real opponents opposite each other, and
+ * fixing just the innermost ring (without touching the rest) makes their
+ * feeder lines cross. Swapping quarters 1 and 2 at every ring, from Round of
+ * 32 inward, moves the actual opponents next to each other instead while
+ * keeping every ring's lines short, local, and crossing-free.
+ */
+const QUARTER_SWAP = [0, 2, 1, 3] as const;
+
+/** Converts a data-order index into its physical (display) position on a ring — or back again, since the swap is self-inverse. */
+function remapQuarter(index: number, perQuarter: number): number {
+  const q = Math.floor(index / perQuarter);
+  const within = index % perQuarter;
+  return QUARTER_SWAP[q] * perQuarter + within;
+}
+
 function polar(r: number, angleDeg: number) {
   const rad = (angleDeg - 90) * (Math.PI / 180); // 0° = top
   return { x: CX + r * Math.cos(rad), y: CY + r * Math.sin(rad) };
@@ -102,8 +121,9 @@ export class BracketWheel {
     const liveIds = this.liveIds();
     const nodes: RNode[] = [];
     this.r32().forEach((m, k) => {
-      const homeA = (2 * k + PAIR_HOME) * (360 / 32);
-      const awayA = (2 * k + PAIR_AWAY) * (360 / 32);
+      const pk = remapQuarter(k, 4);
+      const homeA = (2 * pk + PAIR_HOME) * (360 / 32);
+      const awayA = (2 * pk + PAIR_AWAY) * (360 / 32);
       const h = polar(R_OUTER, homeA);
       const a = polar(R_OUTER, awayA);
       const tip = tipOf(m);
@@ -127,8 +147,9 @@ export class BracketWheel {
     const nextId = this.nextId();
     const liveIds = this.liveIds();
     return this.r32().map((m, k) => {
-      const homeA = (2 * k + PAIR_HOME) * (360 / 32);
-      const awayA = (2 * k + PAIR_AWAY) * (360 / 32);
+      const pk = remapQuarter(k, 4);
+      const homeA = (2 * pk + PAIR_HOME) * (360 / 32);
+      const awayA = (2 * pk + PAIR_AWAY) * (360 / 32);
       const midA = (homeA + awayA) / 2;
       return {
         d: curve(R_OUTER, homeA, R_OUTER + 26, midA, R_OUTER, awayA),
@@ -147,7 +168,8 @@ export class BracketWheel {
     this.r16().forEach((m, j) => {
       const tip = tipOf(m);
       for (const [side, k] of [['home', 2 * j], ['away', 2 * j + 1]] as const) {
-        const p = polar(R_R16, (k + 0.5) * (360 / 16));
+        const pk = remapQuarter(k, 4);
+        const p = polar(R_R16, (pk + 0.5) * (360 / 16));
         nodes.push({
           team: m[side], x: p.x, y: p.y, r: NODE_R,
           matchId: m.id, altId: r32[k]?.id ?? null,
@@ -164,8 +186,8 @@ export class BracketWheel {
     const nextId = this.nextId();
     const liveIds = this.liveIds();
     return this.r16().map((m, j) => {
-      const homeA = (2 * j + 0.5) * (360 / 16);
-      const awayA = (2 * j + 1.5) * (360 / 16);
+      const homeA = (remapQuarter(2 * j, 4) + 0.5) * (360 / 16);
+      const awayA = (remapQuarter(2 * j + 1, 4) + 0.5) * (360 / 16);
       return {
         d: curve(R_R16, homeA, R_R16 + 24, (homeA + awayA) / 2, R_R16, awayA),
         matchId: m.id, altId: null, decided: !!m.winner, next: m.id === nextId,
@@ -179,12 +201,13 @@ export class BracketWheel {
     const r16 = this.r16();
     const links: Link[] = [];
     this.r32().forEach((m, k) => {
-      const aR16 = (k + 0.5) * (360 / 16);
+      const pk = remapQuarter(k, 4);
+      const aR16 = (pk + 0.5) * (360 / 16);
       const rOut = R_OUTER - NODE_R - 4;
       const rIn = R_R16 + NODE_R + 4;
       const altId = r16[Math.floor(k / 2)]?.id ?? null;
       for (const pos of [PAIR_HOME, PAIR_AWAY]) {
-        const a = (2 * k + pos) * (360 / 32);
+        const a = (2 * pk + pos) * (360 / 32);
         links.push({
           d: curve(rOut, a, (rOut + rIn) / 2, (a + aR16) / 2, rIn, aR16),
           matchId: m.id, altId, decided: !!m.winner, next: false, live: false,
@@ -200,7 +223,8 @@ export class BracketWheel {
     const liveIds = this.liveIds();
     const qf = this.qf();
     return this.r16().map((m, j) => {
-      const p = polar(R_QF, (j + 0.5) * (360 / 8));
+      const pj = remapQuarter(j, 2);
+      const p = polar(R_QF, (pj + 0.5) * (360 / 8));
       const w = winnerOf(m);
       // consecutive R16 winners meet in the same Quarterfinal (bracket order)
       const qfMatch = qf[Math.floor(j / 2)] ?? null;
@@ -218,9 +242,11 @@ export class BracketWheel {
     const r16 = this.r16();
     const links: Link[] = [];
     for (let k = 0; k < 16; k++) {
-      const m = r16[Math.floor(k / 2)];
+      const dataK = remapQuarter(k, 4);
+      const dataJ = Math.floor(dataK / 2);
+      const m = r16[dataJ];
       const aIn = (k + 0.5) * (360 / 16);
-      const aQf = (Math.floor(k / 2) + 0.5) * (360 / 8);
+      const aQf = (remapQuarter(dataJ, 2) + 0.5) * (360 / 8);
       const rIn = R_R16 - NODE_R - 4;
       const rQf = R_QF + NODE_R + 4;
       links.push({
@@ -237,7 +263,8 @@ export class BracketWheel {
     const liveIds = this.liveIds();
     const sf = this.sf();
     return this.qf().map((m, j) => {
-      const p = polar(R_SF, (j + 0.5) * (360 / 4));
+      const pj = remapQuarter(j, 1);
+      const p = polar(R_SF, (pj + 0.5) * (360 / 4));
       const w = winnerOf(m);
       // bracket halves, not adjacent QF ids: QF25&27 → SF1, QF26&28 → SF2
       const sfMatch = sf[Math.floor(j / 2)] ?? null;
@@ -255,9 +282,11 @@ export class BracketWheel {
     const qf = this.qf();
     const links: Link[] = [];
     for (let k = 0; k < 8; k++) {
-      const m = qf[Math.floor(k / 2)];
+      const r16DataJ = remapQuarter(k, 2);
+      const qfDataIdx = Math.floor(r16DataJ / 2);
+      const m = qf[qfDataIdx];
       const aQf = (k + 0.5) * (360 / 8);
-      const aSf = (Math.floor(k / 2) + 0.5) * (360 / 4);
+      const aSf = (remapQuarter(qfDataIdx, 1) + 0.5) * (360 / 4);
       const rQf = R_QF - NODE_R - 4;
       const rSf = R_SF + NODE_R + 4;
       links.push({
