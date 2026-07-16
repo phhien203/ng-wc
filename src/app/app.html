@@ -71,6 +71,14 @@
         (hoverChange)="setHover($event)"
       />
       <app-fixture-list
+        title="Bronze final"
+        [matches]="bronzeMatches()"
+        [liveIds]="liveIds()"
+        [nextId]="nextMatch()?.id ?? null"
+        [highlighted]="highlighted()"
+        (hoverChange)="setHover($event)"
+      />
+      <app-fixture-list
         title="Semifinals"
         [matches]="sfMatches()"
         [liveIds]="liveIds()"

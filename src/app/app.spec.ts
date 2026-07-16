@@ -58,4 +58,22 @@ describe('App', () => {
     expect(alts).toContain('France');
     expect(alts).toContain('Norway');
   });
+
+  it('renders the known Final and bronze final teams in the sidebar', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const sections = Array.from(compiled.querySelectorAll('.sidebar app-fixture-list'));
+    const final = sections.find((s) => s.querySelector('h2')?.textContent === 'Final');
+    const bronze = sections.find((s) => s.querySelector('h2')?.textContent === 'Bronze final');
+
+    expect(final).toBeTruthy();
+    const finalAlts = Array.from(final!.querySelectorAll('img.flag')).map((img) => img.getAttribute('alt'));
+    expect(finalAlts).toEqual(['Spain', 'Argentina']);
+    expect(bronze).toBeTruthy();
+    expect(bronze!.querySelectorAll('li.fixture').length).toBe(1);
+    expect(bronze!.textContent).toContain('00:00');
+    const bronzeAlts = Array.from(bronze!.querySelectorAll('img.flag')).map((img) => img.getAttribute('alt'));
+    expect(bronzeAlts).toEqual(['France', 'England']);
+  });
 });

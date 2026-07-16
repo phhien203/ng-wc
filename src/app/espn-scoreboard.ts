@@ -18,7 +18,7 @@ export interface EspnCompetitor {
 }
 
 export const SCOREBOARD_URL =
-  'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=20260628-20260716';
+  'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=20260628-20260720';
 
 function pairKey(a: string, b: string): string {
   return [a, b].sort().join('|');

@@ -24,6 +24,7 @@ export class App {
   protected readonly r16Matches = computed(() => this.matches().filter((m) => m.round === 'R16'));
   protected readonly qfMatches = computed(() => this.matches().filter((m) => m.round === 'QF'));
   protected readonly sfMatches = computed(() => this.matches().filter((m) => m.round === 'SF'));
+  protected readonly bronzeMatches = computed(() => this.matches().filter((m) => m.round === 'B'));
   protected readonly finalMatches = computed(() => this.matches().filter((m) => m.round === 'F'));
 
   /** Ticks every 30 s so the countdown and LIVE badge stay fresh. */

@@ -1,4 +1,15 @@
-import { Match, QUARTERFINALS, SEMIFINALS, Side, TBD, Team, withQfTeams, withSfTeams } from './knockout-data';
+import {
+  BRONZE_FINALS,
+  Match,
+  QUARTERFINALS,
+  SEMIFINALS,
+  Side,
+  TBD,
+  Team,
+  withBronzeTeams,
+  withQfTeams,
+  withSfTeams,
+} from './knockout-data';
 
 const team = (code: string): Team => ({ code, name: code, flag: code.toLowerCase() });
 
@@ -8,6 +19,10 @@ function r16(id: number, home: Team, away: Team, winner?: Side): Match {
 
 function qf(id: number, home: Team, away: Team, winner?: Side): Match {
   return { id, round: 'QF', home, away, winner, koDate: 'x', koTime: '00:00', koISO: '2026-07-09T00:00' };
+}
+
+function sf(id: number, home: Team, away: Team, winner?: Side): Match {
+  return { id, round: 'SF', home, away, winner, koDate: 'x', koTime: '00:00', koISO: '2026-07-14T00:00' };
 }
 
 describe('withQfTeams', () => {
@@ -90,5 +105,21 @@ describe('withSfTeams', () => {
       expect(sf.koTime).toBeTruthy();
       expect(sf.koISO.startsWith('2026-07-')).toBe(true);
     }
+  });
+});
+
+describe('withBronzeTeams', () => {
+  it('pairs the two Semifinal losers in the bronze final', () => {
+    const bracket = [
+      sf(29, team('AAA'), team('BBB'), 'home'),
+      sf(30, team('CCC'), team('DDD'), 'away'),
+      ...BRONZE_FINALS,
+    ];
+
+    const bronze = withBronzeTeams(bracket).find((m) => m.round === 'B')!;
+
+    expect(bronze.home.code).toBe('BBB');
+    expect(bronze.away.code).toBe('CCC');
+    expect(bronze.koISO).toBe('2026-07-19T00:00');
   });
 });

@@ -1,4 +1,4 @@
-import { EspnEvent, EspnScoreboard, mergeScoreboard } from './espn-scoreboard';
+import { EspnEvent, EspnScoreboard, SCOREBOARD_URL, mergeScoreboard } from './espn-scoreboard';
 import { Match, TBD, Team } from './knockout-data';
 
 interface Comp {
@@ -35,6 +35,10 @@ const bracket: Match[] = [
   { id: 24, round: 'R16', home: team('SUI'), away: team('COL'), koDate: 'x', koTime: '00:00', koISO: '2026-07-07T00:00' },
   { id: 25, round: 'QF', home: TBD, away: TBD, koDate: 'x', koTime: '00:00', koISO: '2026-07-09T00:00' },
 ];
+
+it('polls through the Final and bronze final date', () => {
+  expect(SCOREBOARD_URL).toContain('20260720');
+});
 
 describe('mergeScoreboard', () => {
   const scoreboard: EspnScoreboard = {

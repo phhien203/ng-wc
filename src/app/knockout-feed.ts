@@ -4,7 +4,14 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs/operators';
 
 import { EspnScoreboard, SCOREBOARD_URL, mergeScoreboard } from './espn-scoreboard';
-import { KNOCKOUT_MATCHES, Match, withFTeams, withQfTeams, withSfTeams } from './knockout-data';
+import {
+  KNOCKOUT_MATCHES,
+  Match,
+  withBronzeTeams,
+  withFTeams,
+  withQfTeams,
+  withSfTeams,
+} from './knockout-data';
 import { poll } from './poll.operator';
 
 /**
@@ -28,7 +35,8 @@ export class KnockoutFeed {
       const merged = mergeScoreboard(KNOCKOUT_MATCHES, scoreboard);
       const withQf = mergeScoreboard(withQfTeams(merged), scoreboard);
       const withSf = mergeScoreboard(withSfTeams(withQf), scoreboard);
-      return mergeScoreboard(withFTeams(withSf), scoreboard);
+      const withBronze = mergeScoreboard(withBronzeTeams(withSf), scoreboard);
+      return mergeScoreboard(withFTeams(withBronze), scoreboard);
     }),
   );
 
@@ -39,7 +47,7 @@ export class KnockoutFeed {
   readonly matches: Signal<Match[]> = toSignal(
     this.fetch$.pipe(poll<Match[]>({ period: 60_000 })),
     {
-      initialValue: withFTeams(withSfTeams(withQfTeams(KNOCKOUT_MATCHES))),
+      initialValue: withFTeams(withBronzeTeams(withSfTeams(withQfTeams(KNOCKOUT_MATCHES)))),
     },
   );
 }

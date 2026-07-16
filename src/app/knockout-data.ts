@@ -1,8 +1,8 @@
 /**
  * REAL World Cup 2026 knockout data (Canada/Mexico/USA).
- * Source: ESPN — updated Jul 12, 2026: Round of 32, Round of 16, and the
- * Quarterfinals (Jul 9–12 Finland time) are complete — France, England,
- * Spain, and Argentina through; Semifinals (Jul 14–15) are scheduled.
+ * Source: ESPN — updated Jul 16, 2026: Round of 32 through the Semifinals
+ * are complete. Spain and Argentina reached the Final; France and England
+ * will meet in the bronze final.
  *
  * Matches are ordered to follow the actual bracket, so:
  *   - R32 pairs (M1,M2),(M3,M4)... meet in the Round of 16
@@ -25,7 +25,7 @@ export interface Team {
 
 export type Side = 'home' | 'away';
 
-export type Round = 'R32' | 'R16' | 'QF' | 'SF' | 'F';
+export type Round = 'R32' | 'R16' | 'QF' | 'SF' | 'B' | 'F';
 
 export interface Match {
   id: number;
@@ -153,8 +153,17 @@ const QF_SEED: Omit<MatchSeed, 'home' | 'away'>[] = [
  */
 // prettier-ignore
 const SF_SEED: Omit<MatchSeed, 'home' | 'away'>[] = [
-  { id: 29, koDate: 'Tue Jul 14', koTime: '22:00', koISO: '2026-07-14T22:00' },
-  { id: 30, koDate: 'Wed Jul 15', koTime: '22:00', koISO: '2026-07-15T22:00' },
+  { id: 29, winner: 'away', note: '0-2', koDate: 'Tue Jul 14', koTime: '22:00', koISO: '2026-07-14T22:00' },
+  { id: 30, winner: 'away', note: '1-2', koDate: 'Wed Jul 15', koTime: '22:00', koISO: '2026-07-15T22:00' },
+];
+
+/**
+ * The bronze final (Jul 19, Finland time). The Semifinal losers are filled
+ * in by `withBronzeTeams`.
+ */
+// prettier-ignore
+const BRONZE_SEED: Omit<MatchSeed, 'home' | 'away'>[] = [
+  { id: 32, koDate: 'Sun Jul 19', koTime: '00:00', koISO: '2026-07-19T00:00' },
 ];
 
 /**
@@ -170,10 +179,18 @@ export const ROUND_OF_32: Match[] = R32_SEED.map((m) => ({ ...m, round: 'R32' })
 export const ROUND_OF_16: Match[] = R16_SEED.map((m) => ({ ...m, round: 'R16' }));
 export const QUARTERFINALS: Match[] = QF_SEED.map((m) => ({ ...m, round: 'QF', home: TBD, away: TBD }));
 export const SEMIFINALS: Match[] = SF_SEED.map((m) => ({ ...m, round: 'SF', home: TBD, away: TBD }));
+export const BRONZE_FINALS: Match[] = BRONZE_SEED.map((m) => ({ ...m, round: 'B', home: TBD, away: TBD }));
 export const FINALS: Match[] = F_SEED.map((m) => ({ ...m, round: 'F', home: TBD, away: TBD }));
 
 /** All knockout matches known so far, bracket-ordered within each round. */
-export const KNOCKOUT_MATCHES: Match[] = [...ROUND_OF_32, ...ROUND_OF_16, ...QUARTERFINALS, ...SEMIFINALS, ...FINALS];
+export const KNOCKOUT_MATCHES: Match[] = [
+  ...ROUND_OF_32,
+  ...ROUND_OF_16,
+  ...QUARTERFINALS,
+  ...SEMIFINALS,
+  ...BRONZE_FINALS,
+  ...FINALS,
+];
 
 /** Looks up the winning team of a feeder match by id, or `TBD` if undecided. */
 function winnerLookup(matches: Match[]): (id: number) => Team {
@@ -211,6 +228,21 @@ export function withSfTeams(matches: Match[]): Match[] {
     if (m.round !== 'SF') return m;
     const [homeId, awayId] = SF_FEEDERS[m.id];
     return { ...m, home: feederWinner(homeId), away: feederWinner(awayId) };
+  });
+}
+
+/** The losing team of a match, or `TBD` if the match is undecided. */
+function loserOf(m: Match | undefined): Team {
+  if (!m?.winner) return TBD;
+  return m.winner === 'home' ? m.away : m.home;
+}
+
+/** Fill the bronze final with the two Semifinal losers. */
+export function withBronzeTeams(matches: Match[]): Match[] {
+  const byId = new Map(matches.map((m) => [m.id, m]));
+  return matches.map((m) => {
+    if (m.round !== 'B') return m;
+    return { ...m, home: loserOf(byId.get(29)), away: loserOf(byId.get(30)) };
   });
 }
 
