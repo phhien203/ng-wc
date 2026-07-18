@@ -57,14 +57,6 @@ svg {
     opacity: 0.45;
   }
 
-  .code {
-    font-family: var(--font-display);
-    font-size: 13px;
-    font-weight: 700;
-    fill: var(--text);
-    letter-spacing: 0.6px;
-  }
-
   &:hover .stroke {
     stroke: var(--accent);
     stroke-width: 4;
