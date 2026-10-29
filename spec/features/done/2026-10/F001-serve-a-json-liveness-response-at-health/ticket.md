@@ -1,5 +1,6 @@
 ---
 opened: 2026-10-29
+landed: 2026-10-29
 ---
 
 # F001 · Serve a JSON liveness response at /health
